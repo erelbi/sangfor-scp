@@ -102,7 +102,7 @@ class SystemResource(PaginatedResource):
 
     def get_host(self, host_id: str) -> Dict[str, Any]:
         """Tek bir fiziksel node'un detayını döndürür."""
-        return self._get(f"/janus/20180725/hosts/{host_id}")
+        return self._get(f"/janus/20190725/hosts/{host_id}")
 
     def list_host_interfaces(
         self,
@@ -118,7 +118,7 @@ class SystemResource(PaginatedResource):
         """
         params = {k: v for k, v in filters.items() if v is not None}
         result = self._get(
-            f"/janus/20180725/hosts/{host_id}/interfaces",
+            f"/janus/20190725/hosts/{host_id}/interfaces",
             params=params or None,
         )
         # Bu endpoint liste döner (sarmalı olmadan)
