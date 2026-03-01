@@ -158,5 +158,11 @@ class VolumesResource(PaginatedResource):
         return list(self.list_all(status="available", **filters))
 
     def list_attached(self, server_id: str) -> List[Dict[str, Any]]:
-        """Belirli bir VM'e bağlı diskleri liste olarak döndürür."""
-        return list(self.list_all(server_id=server_id))
+        """
+        Belirli bir VM'e bağlı diskleri döndürür.
+
+        Volumes API server_id filtresi kabul etmediğinden
+        VM detayındaki disks alanı kullanılır.
+        """
+        vm = self._client.servers.get(server_id)
+        return vm.get("disks", [])
