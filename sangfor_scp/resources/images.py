@@ -73,7 +73,11 @@ class ImagesResource(PaginatedResource):
             os_type, size_mb, visibility, azs (resource pool listesi),
             disks (aCloud için sistem diski bilgisi) vb.
         """
-        return self._get(f"{self._BASE}/{image_id}")
+        from sangfor_scp.exceptions import SCPNotFoundError
+        for img in self.list_all():
+            if img.get("id") == image_id:
+                return img
+        raise SCPNotFoundError(f"Image not found: {image_id}")
 
     def list(self, **filters: Any) -> List[Dict[str, Any]]:
         """Tüm imajları liste olarak döndürür."""

@@ -153,10 +153,10 @@ class VolumesResource(PaginatedResource):
     # Filtreli sorgular                                                   #
     # ------------------------------------------------------------------ #
 
-    def list_available(self, **filters: Any) -> Iterator[Dict[str, Any]]:
-        """Henüz VM'e bağlanmamış diskleri iterate eder."""
-        return self.list_all(status="available", **filters)
+    def list_available(self, **filters: Any) -> List[Dict[str, Any]]:
+        """Henüz VM'e bağlanmamış diskleri liste olarak döndürür."""
+        return list(self.list_all(status="available", **filters))
 
-    def list_attached(self, server_id: str) -> Iterator[Dict[str, Any]]:
-        """Belirli bir VM'e bağlı diskleri iterate eder."""
-        return self.list_all(server_id=server_id)
+    def list_attached(self, server_id: str) -> List[Dict[str, Any]]:
+        """Belirli bir VM'e bağlı diskleri liste olarak döndürür."""
+        return list(self.list_all(server_id=server_id))
