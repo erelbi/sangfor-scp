@@ -49,7 +49,7 @@ from sangfor_scp.exceptions import (
     SCPTimeoutError,
 )
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Sangfor SCP API Library"
 
 __all__ = [
