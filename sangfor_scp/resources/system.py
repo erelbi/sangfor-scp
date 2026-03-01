@@ -118,7 +118,7 @@ class SystemResource(PaginatedResource):
         """
         params = {k: v for k, v in filters.items() if v is not None}
         result = self._get(
-            f"/janus/20190725/hosts/{host_id}/interfaces",
+            f"/janus/20180725/hosts/{host_id}/interfaces",
             params=params or None,
         )
         # Bu endpoint liste döner (sarmalı olmadan)
