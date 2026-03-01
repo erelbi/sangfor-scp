@@ -142,7 +142,6 @@
       border-radius: var(--radius);
       padding: 18px;
     }
-    .feature-card .icon { font-size: 1.4rem; margin-bottom: 8px; }
     .feature-card h4 { font-size: 0.95rem; margin-bottom: 6px; }
     .feature-card p { font-size: 0.85rem; margin: 0; }
 
@@ -194,32 +193,26 @@
     <h2>Features</h2>
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="icon">⚡</div>
         <h4>Single Login</h4>
         <p>Authenticate once in <code>__init__</code>. Session reused for all calls — no per-request delays.</p>
       </div>
       <div class="feature-card">
-        <div class="icon">📄</div>
         <h4>Auto Pagination</h4>
         <p><code>list_all()</code> lazily iterates every page. No manual page tracking needed.</p>
       </div>
       <div class="feature-card">
-        <div class="icon">🔄</div>
         <h4>Async Task Polling</h4>
         <p><code>tasks.wait()</code> polls until completion, raises on failure or timeout.</p>
       </div>
       <div class="feature-card">
-        <div class="icon">🔑</div>
         <h4>Dual Auth</h4>
         <p>EC2 (AWS4-HMAC-SHA256) signature or Token-based (RSA encrypted) authentication.</p>
       </div>
       <div class="feature-card">
-        <div class="icon">🛡️</div>
         <h4>Idempotency</h4>
         <p>Automatic <code>X-Client-Token</code> headers on POST/PUT requests.</p>
       </div>
       <div class="feature-card">
-        <div class="icon">🔁</div>
         <h4>Token Refresh</h4>
         <p>24-hour tokens renewed transparently. Your long-running scripts stay connected.</p>
       </div>
