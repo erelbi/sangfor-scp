@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sangfor-scp"
+version = "0.1.1"
+description = "Sangfor Cloud Platform (SCP) Open-API Python Client Library"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.8"
+keywords = ["sangfor", "scp", "cloud", "api", "client", "virtualization", "HCI"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Internet",
+]
+dependencies = [
+    "requests>=2.28.0",
+    "urllib3>=1.26.0",
+]
+
+[project.optional-dependencies]
+token-auth = ["pycryptodome>=3.17"]
+dev = [
+    "pytest>=7.0",
+    "pytest-mock>=3.10",
+    "build>=1.0",
+    "twine>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/erelbi/sangfor-scp-api"
+Repository = "https://github.com/erelbi/sangfor-scp-api"
+"Bug Tracker" = "https://github.com/erelbi/sangfor-scp-api/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sangfor_scp*"]
