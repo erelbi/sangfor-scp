@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sangfor-scp — Python API Client</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --border:   #30363d;
+      --accent:   #1f6feb;
+      --accent2:  #388bfd;
+      --green:    #3fb950;
+      --yellow:   #d29922;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --radius:   10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    header h1 span { color: var(--accent2); }
+    header p.tagline {
+      color: var(--muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+    .badges img { height: 22px; }
+
+    .install-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 1rem;
+      color: var(--green);
+    }
+    .install-box .dollar { color: var(--muted); }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    section { margin-bottom: 56px; }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 28px 0 10px;
+    }
+
+    p { color: var(--muted); margin-bottom: 12px; }
+
+    /* ── CODE BLOCKS ── */
+    .code-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 700px) { .code-pair { grid-template-columns: 1fr; } }
+
+    .code-block { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    .code-block .label {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .code-block .label .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+    .code-block .label .dot.green { background: var(--green); }
+    .code-block pre { margin: 0 !important; border-radius: 0 !important; border: none !important; }
+    .code-block pre code { font-size: 0.83rem !important; }
+
+    /* ── FEATURE GRID ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .feature-card .icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .feature-card h4 { font-size: 0.95rem; margin-bottom: 6px; }
+    .feature-card p { font-size: 0.85rem; margin: 0; }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; background: var(--surface); }
+    tr:last-child td { border-bottom: none; }
+    code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 0.85em; color: var(--accent2); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <h1><span>sangfor</span>-scp</h1>
+  <p class="tagline">
+    Pythonic REST API client for Sangfor Cloud Platform (SCP).<br/>
+    Single login · Auto pagination · Async task polling · EC2 &amp; Token auth.
+  </p>
+  <div class="badges">
+    <img src="https://badge.fury.io/py/sangfor-scp.svg" alt="PyPI version" />
+    <img src="https://img.shields.io/pypi/pyversions/sangfor-scp" alt="Python versions" />
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
+    <img src="https://img.shields.io/badge/status-stable-brightgreen" alt="Stable" />
+  </div>
+  <div class="install-box">
+    <span class="dollar">$</span>
+    pip install sangfor-scp
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- FEATURES -->
+  <section>
+    <h2>Features</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">⚡</div>
+        <h4>Single Login</h4>
+        <p>Authenticate once in <code>__init__</code>. Session reused for all calls — no per-request delays.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📄</div>
+        <h4>Auto Pagination</h4>
+        <p><code>list_all()</code> lazily iterates every page. No manual page tracking needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔄</div>
+        <h4>Async Task Polling</h4>
+        <p><code>tasks.wait()</code> polls until completion, raises on failure or timeout.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔑</div>
+        <h4>Dual Auth</h4>
+        <p>EC2 (AWS4-HMAC-SHA256) signature or Token-based (RSA encrypted) authentication.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛡️</div>
+        <h4>Idempotency</h4>
+        <p>Automatic <code>X-Client-Token</code> headers on POST/PUT requests.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔁</div>
+        <h4>Token Refresh</h4>
+        <p>24-hour tokens renewed transparently. Your long-running scripts stay connected.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section>
+    <h2>Quick Start</h2>
+
+    <h3>EC2 Authentication (Recommended)</h3>
+    <div class="code-block">
+      <div class="label"><span class="dot"></span>Python</div>
+<pre><code class="language-python">from sangfor_scp import SCPClient
+
+client = SCPClient(
+    host="10.10.10.10",
+    access_key="AK5F3B2A1D9E7C4082F1",
+    secret_key="sK9mXpL2rN8vQwZdTfUcOb4jYhAeIgBk",
+    region="cn-south-1",
+    verify_ssl=False,   # SCP uses self-signed certs by default
+)</code></pre>
+    </div>
+
+    <h3>Token Authentication</h3>
+    <div class="code-block">
+      <div class="label"><span class="dot"></span>Python</div>
+<pre><code class="language-python">from sangfor_scp import SCPClient
+
+client = SCPClient(
+    host="10.10.10.10",
+    username="admin",
+    password="your_password",
+    verify_ssl=False,
+)</code></pre>
+    </div>
+  </section>
+
+  <!-- VIRTUAL MACHINES -->
+  <section>
+    <h2>Virtual Machines</h2>
+
+    <h3>List all VMs (auto-paginated)</h3>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python">for vm in client.servers.list_all():
+    print(vm["id"], vm["name"], vm["status"])
+
+# Filter by resource pool
+for vm in client.servers.list_all(az_id="878b7070-6d87-409a-a141-7224fc7bcedd"):
+    print(vm["name"])
+
+# Count without fetching all
+total = client.servers.count()
+print(f"Total VMs: {total}")</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// vm object example
+{
+  "id": "f14b3195-653e-41b0-a2a9-235e38770c1a",
+  "name": "web-server-01",
+  "status": "running",
+  "cores": 4,
+  "memory_mb": 8192,
+  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd",
+  "host_id": "host-90e2bad3dfa4",
+  "disks": [{ "id": "ide0", "size_mb": 51200 }],
+  "networks": [{ "ip": "192.168.1.101", "mac": "fa:16:3e:ab:cd:ef" }]
+}</code></pre>
+      </div>
+    </div>
+
+    <h3>Get VM detail</h3>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python">vm = client.servers.get("f14b3195-653e-41b0-a2a9-235e38770c1a")
+print(vm["name"], vm["status"])
+print(f"CPU: {vm['cores']}  RAM: {vm['memory_mb']}MB")</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">{
+  "id": "f14b3195-653e-41b0-a2a9-235e38770c1a",
+  "name": "web-server-01",
+  "status": "running",
+  "cores": 4,
+  "memory_mb": 8192
+}</code></pre>
+      </div>
+    </div>
+
+    <h3>Create a VM and wait for completion</h3>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python">result = client.servers.create(
+    az_id="878b7070-6d87-409a-a141-7224fc7bcedd",
+    image_id="98a5f5a0-665a-4d66-ba9e-985fc860b7eb",
+    storage_tag_id="00000000-0000-0000-0000-000000000000",
+    cores=4,
+    memory_mb=8192,
+    name="web-server-01",
+    networks=[{
+        "vif_id": "net0",
+        "vpc_id": "vpc-3a1f9c2d",
+        "subnet_id": "sub-7b4e1a09",
+        "connect": 1,
+        "model": "virtio",
+    }],
+    power_on=True,
+)
+
+# Wait up to 5 minutes
+task = client.tasks.wait(result["task_id"], timeout=300)
+vm_id = result["uuids"][0]
+print(f"VM created: {vm_id}")</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">{
+  "task_id": "task-a3f91bc2-4d8e-11ef-b123-0050568a1234",
+  "uuids": [
+    "f14b3195-653e-41b0-a2a9-235e38770c1a"
+  ]
+}
+
+// After tasks.wait():
+{
+  "id": "task-a3f91bc2-4d8e-11ef-b123",
+  "status": "finish",
+  "progress": 100,
+  "description": "Create VM success"
+}</code></pre>
+      </div>
+    </div>
+
+    <h3>Power operations</h3>
+    <div class="code-block">
+      <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python">vm_id = "f14b3195-653e-41b0-a2a9-235e38770c1a"
+
+client.servers.power_on(vm_id)
+client.servers.power_off(vm_id)
+client.servers.power_off(vm_id, force=True)   # hard power off
+client.servers.reboot(vm_id)
+client.servers.reboot(vm_id, force=True)       # force reboot
+client.servers.suspend(vm_id)
+client.servers.resume(vm_id)</code></pre>
+    </div>
+  </section>
+
+  <!-- RESOURCE POOLS -->
+  <section>
+    <h2>Resource Pools (AZ)</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python">for az in client.resource_pools.list_all():
+    print(az["id"], az["name"])
+
+# Platform-wide overview
+ov = client.resource_pools.overview()
+print(f"Total VMs : {ov['server']['total']}")
+print(f"Running   : {ov['server']['running_count']}")
+print(f"Total hosts: {ov['host']['total']}")
+
+# Storage tags in a pool
+tags = client.resource_pools.storage_tags(az_id="878b7070-...")
+for t in tags:
+    print(t["id"], t["name"])</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// list_all() item
+{ "id": "878b7070-6d87-409a-a141-7224fc7bcedd", "name": "DATACENTER-A" }
+
+// overview()
+{
+  "server": { "total": 1422, "running_count": 1098 },
+  "host":   { "total": 32,   "running_count": 32 }
+}
+
+// storage_tags()
+[
+  { "id": "00000000-0000-0000-0000-000000000000", "name": "High Performance" },
+  { "id": "22222222-2222-2222-2222-222222222222", "name": "Capacity Storage" }
+]</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- IMAGES -->
+  <section>
+    <h2>Images</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python"># All images
+for img in client.images.list_all():
+    print(img["id"], img["name"])
+
+# Filter by type
+for img in client.images.list_iso():
+    print(img["name"])
+
+for img in client.images.list_acloud():
+    print(img["name"])
+
+# Find by name
+img = client.images.find_by_name("Rocky-9.7-x86_64-minimal")
+if img:
+    print(img["id"])</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// image object
+{
+  "id": "98a5f5a0-665a-4d66-ba9e-985fc860b7eb",
+  "name": "Rocky-9.7-x86_64-minimal",
+  "disk_format": "ISO",
+  "os_type": "linux",
+  "size_mb": 1024,
+  "status": "active",
+  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd"
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOLUMES -->
+  <section>
+    <h2>Volumes (Disks)</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python"># Create a standalone disk
+result = client.volumes.create(
+    az_id="878b7070-6d87-409a-a141-7224fc7bcedd",
+    storage_tag_id="00000000-0000-0000-0000-000000000000",
+    size_mb=102400,   # 100 GB
+    name="data-disk-01",
+)
+client.tasks.wait(result["task_id"])
+volume_id = result["volume_id"]
+
+# Attach to a VM
+task_id = client.servers.attach_volume("vm-uuid", volume_id)
+client.tasks.wait(task_id)
+
+# Detach
+task_id = client.servers.detach_volume("vm-uuid", volume_id)
+client.tasks.wait(task_id)
+
+# List disks attached to a VM
+disks = client.volumes.list_attached("vm-uuid")
+for d in disks:
+    print(d)</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// create()
+{
+  "volume_id": "vol-d4a19f3c-72b1-4e8a",
+  "task_id": "task-b7e2ca10-5f91-11ef"
+}
+
+// list_all() item
+{
+  "id": "vol-d4a19f3c-72b1-4e8a",
+  "name": "data-disk-01",
+  "status": "available",
+  "size_mb": 102400,
+  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd"
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- NETWORKS -->
+  <section>
+    <h2>Networks</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python"># List VPCs
+for vpc in client.networks.list_vpcs():
+    print(vpc["id"], vpc["name"])
+
+# Create VPC
+vpc = client.networks.create_vpc(
+    az_id="878b7070-...",
+    name="prod-vpc",
+    cidr="10.0.0.0/16",
+)
+
+# Create Subnet
+subnet = client.networks.create_subnet(
+    vpc_id=vpc["id"],
+    az_id="878b7070-...",
+    cidr="10.0.1.0/24",
+    name="prod-subnet-a",
+    gateway_ip="10.0.1.1",
+)
+
+# List subnets in a VPC
+for s in client.networks.list_subnets(vpc_id=vpc["id"]):
+    print(s["cidr"], s["name"])</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// VPC object
+{
+  "id": "vpc-3a1f9c2d-8e74-4b12-a091",
+  "name": "prod-vpc",
+  "cidr": "10.0.0.0/16",
+  "status": "active",
+  "az_id": "878b7070-6d87-409a-a141"
+}
+
+// Subnet object
+{
+  "id": "sub-7b4e1a09-3c82-4f51-b207",
+  "name": "prod-subnet-a",
+  "cidr": "10.0.1.0/24",
+  "gateway_ip": "10.0.1.1",
+  "vpc_id": "vpc-3a1f9c2d-8e74-4b12"
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ELASTIC IPs -->
+  <section>
+    <h2>Elastic IPs</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python"># Allocate
+eip = client.eips.allocate(
+    az_id="878b7070-...",
+    bandwidth_mb=100,
+    name="web-eip-01",
+)
+eip_id = eip["id"]
+
+# Bind to a VM
+task_id = client.eips.bind(eip_id, server_id="vm-uuid")
+client.tasks.wait(task_id)
+
+# Update bandwidth
+client.eips.update_bandwidth(eip_id, bandwidth_mb=500)
+
+# Unbind and release
+client.eips.unbind(eip_id)
+client.eips.release(eip_id)</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// allocate()
+{
+  "id": "eip-c9f3a217-4b8d-11ef-9021",
+  "ip": "203.0.113.45",
+  "status": "inactive",
+  "bandwidth_mb": 100,
+  "az_id": "878b7070-6d87-409a-a141"
+}
+
+// bind() — returns task_id
+"task-f2b9e341-5c1d-11ef-b872-0050568a1234"</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section>
+    <h2>Async Tasks</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python"># Simple wait
+task = client.tasks.wait("task-uuid", timeout=300)
+
+# With progress callback
+def on_progress(task_data):
+    pct = task_data.get("progress", 0)
+    desc = task_data.get("description", "")
+    print(f"  {pct}%  {desc}")
+
+task = client.tasks.wait(
+    task_id="task-uuid",
+    timeout=600,
+    poll_interval=5,
+    progress_callback=on_progress,
+)
+
+# Non-blocking check
+if client.tasks.is_done("task-uuid"):
+    print("done!")</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// task object
+{
+  "id": "task-a3f91bc2-4d8e-11ef-b123",
+  "status": "finish",
+  "progress": 100,
+  "description": "Create VM success",
+  "created_at": "2025-11-27T10:32:14Z",
+  "finished_at": "2025-11-27T10:33:02Z"
+}
+
+// Possible statuses:
+// waiting → doing → finish
+//                 → failure
+//                 → canceled</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHYSICAL HOSTS -->
+  <section>
+    <h2>Physical Hosts</h2>
+    <div class="code-pair">
+      <div class="code-block">
+        <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python"># List all hosts
+for host in client.system.list_all_hosts():
+    print(host["id"], host["name"], host["status"])
+
+# Filter by AZ or status
+running = list(client.system.list_all_hosts(
+    az_id="878b7070-...",
+    status="running",
+))
+print(f"{len(running)} running hosts")
+
+# Get specific host
+host = client.system.get_host("host-90e2bad3dfa4")
+print(host["name"], host["status"])
+
+# Host network interfaces
+ifaces = client.system.list_host_interfaces("host-90e2bad3dfa4")
+for i in ifaces:
+    print(i["name"], i["ip"])</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="label"><span class="dot green"></span>Response</div>
+<pre><code class="language-json">// host object
+{
+  "id": "host-90e2bad3dfa4",
+  "name": "10.10.10.101",
+  "status": "running",
+  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd",
+  "cpu_total": 64,
+  "cpu_used": 28,
+  "memory_total_mb": 196608,
+  "memory_used_mb": 87040
+}
+
+// interface object
+{
+  "name": "bond0",
+  "ip": "10.10.10.101",
+  "function": "mgmt",
+  "speed_mbps": 10000
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ERROR HANDLING -->
+  <section>
+    <h2>Error Handling</h2>
+    <div class="code-block">
+      <div class="label"><span class="dot"></span>Code</div>
+<pre><code class="language-python">from sangfor_scp import (
+    SCPError,          # base exception
+    SCPAuthError,      # 401 Unauthorized
+    SCPForbiddenError, # 403 Forbidden
+    SCPNotFoundError,  # 404 Not Found
+    SCPConflictError,  # 409 Conflict
+    SCPRateLimitError, # 429 Too Many Requests
+    SCPTaskError,      # task ended in failure/canceled
+    SCPTimeoutError,   # tasks.wait() timed out
+)
+
+try:
+    vm = client.servers.get("nonexistent-uuid")
+except SCPNotFoundError:
+    print("VM not found")
+
+try:
+    task = client.tasks.wait("task-uuid", timeout=60)
+except SCPTaskError as e:
+    print(f"Task failed: {e}")
+except SCPTimeoutError as e:
+    print(f"Timed out after {e.timeout}s")</code></pre>
+    </div>
+  </section>
+
+  <!-- API COVERAGE -->
+  <section>
+    <h2>API Coverage</h2>
+    <table>
+      <thead>
+        <tr><th>Resource</th><th>Operations</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>client.servers</code></td><td>list_all, get, create, delete, power on/off/reboot, attach/detach volume</td></tr>
+        <tr><td><code>client.tasks</code></td><td>get, wait (with timeout &amp; progress callback), is_done</td></tr>
+        <tr><td><code>client.resource_pools</code></td><td>list_all, get, overview, storage_tags</td></tr>
+        <tr><td><code>client.tenants</code></td><td>list_all, get, find_by_name, list_by_resource_pool</td></tr>
+        <tr><td><code>client.images</code></td><td>list_all, get, find_by_name, list_iso, list_acloud</td></tr>
+        <tr><td><code>client.volumes</code></td><td>list_all, get, create, delete, resize, list_available, list_attached</td></tr>
+        <tr><td><code>client.networks</code></td><td>VPC: list, create, get, delete · Subnet: list, create, get, delete</td></tr>
+        <tr><td><code>client.eips</code></td><td>allocate, bind, unbind, release, update_bandwidth</td></tr>
+        <tr><td><code>client.system</code></td><td>version, platform_info, list_all_hosts, get_host, list_host_interfaces</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p>
+    <a href="https://pypi.org/project/sangfor-scp/" target="_blank">PyPI</a> &nbsp;·&nbsp;
+    <a href="https://github.com/erelbi/sangfor-scp" target="_blank">GitHub</a> &nbsp;·&nbsp;
+    MIT License
+  </p>
+  <p style="margin-top:8px;">sangfor-scp is an independent open-source project, not affiliated with Sangfor Technologies.</p>
+</footer>
+
+</body>
+</html>

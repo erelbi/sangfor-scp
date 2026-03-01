@@ -4,6 +4,8 @@
 [![Python](https://img.shields.io/pypi/pyversions/sangfor-scp)](https://pypi.org/project/sangfor-scp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+📖 **[Live Examples & API Docs →](https://erelbi.github.io/sangfor-scp/)**
+
 **Sangfor Cloud Platform (SCP) Open-API Python Client Library**
 
 A clean, Pythonic wrapper for the Sangfor Cloud Platform REST API.
