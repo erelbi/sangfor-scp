@@ -101,8 +101,17 @@ class SystemResource(PaginatedResource):
         return self.list_all(**filters)
 
     def get_host(self, host_id: str) -> Dict[str, Any]:
-        """Tek bir fiziksel node'un detayını döndürür."""
-        return self._get(f"/janus/20190725/hosts/{host_id}")
+        """
+        Tek bir fiziksel node'un detayını döndürür.
+
+        SCP API'sinde /hosts/{id} endpoint'i bazı versiyonlarda çalışmadığından
+        liste üzerinden istemci tarafında filtreleme yapılır.
+        """
+        from sangfor_scp.exceptions import SCPNotFoundError
+        for host in self.list_all():
+            if host.get("id") == host_id:
+                return host
+        raise SCPNotFoundError(f"Host not found: {host_id}")
 
     def list_host_interfaces(
         self,
