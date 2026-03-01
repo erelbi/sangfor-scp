@@ -41,9 +41,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/erelbi/sangfor-scp-api"
-Repository = "https://github.com/erelbi/sangfor-scp-api"
-"Bug Tracker" = "https://github.com/erelbi/sangfor-scp-api/issues"
+Homepage = "https://github.com/erelbi/sangfor-scp"
+Repository = "https://github.com/erelbi/sangfor-scp"
+"Bug Tracker" = "https://github.com/erelbi/sangfor-scp/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

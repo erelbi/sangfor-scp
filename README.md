@@ -294,7 +294,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-![Onur Çılbır](https://raw.githubusercontent.com/erelbi/sangfor-scp-api/main/onurcilbir.png)
+![Onur Çılbır](https://raw.githubusercontent.com/erelbi/sangfor-scp/main/onurcilbir.png)
 
 ### 🏆 A Tribute to the Man Who Started It All
 
