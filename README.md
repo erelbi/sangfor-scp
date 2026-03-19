@@ -27,7 +27,7 @@ Supports EC2 (AWS4-HMAC-SHA256) and Token-based authentication with a **single l
 
 | Resource | Operations |
 |---|---|
-| **Virtual Machines** | list, get, create, delete, power on/off/reboot |
+| **Virtual Machines** | list, get, create, update/rename, delete, power on/off/reboot/suspend, clone, migrate, console URL, password reset, batch ops, soft delete & restore |
 | **Tasks** | get, wait (with timeout & progress callback) |
 | **Resource Pools (AZ)** | list, get, overview, storage tags |
 | **Tenants** | list, get, find by name |
@@ -126,13 +126,82 @@ vm_id = result["uuids"][0]
 print(f"VM created: {vm_id}")
 ```
 
+### Rename / Update a VM
+
+```python
+# Rename
+task_id = client.servers.rename("vm-uuid", "new-name")
+client.tasks.wait(task_id)
+
+# Update multiple properties at once (only passed fields are changed)
+task_id = client.servers.update(
+    "vm-uuid",
+    name="renamed-vm",
+    cores=4,
+    memory_mb=8192,
+    description="Updated description",
+)
+client.tasks.wait(task_id)
+```
+
 ### Power Operations
 
 ```python
-client.servers.power_off("vm-uuid")
-client.servers.power_on("vm-uuid")
+client.servers.stop("vm-uuid")
+client.servers.stop("vm-uuid", force=True)     # force power off
+client.servers.start("vm-uuid")
 client.servers.reboot("vm-uuid")
 client.servers.reboot("vm-uuid", force=True)   # force reboot
+client.servers.suspend("vm-uuid")
+```
+
+### Clone a VM
+
+```python
+result = client.servers.clone(
+    "vm-uuid",
+    name="cloned-vm",
+    az_id="az-uuid",           # optional: target resource pool
+    storage_tag_id="tag-uuid", # optional: target storage
+)
+client.tasks.wait(result["task_id"])
+new_vm_id = result["uuid"]
+```
+
+### Migrate a VM
+
+```python
+# Migrate to a specific host (None = auto-select)
+task_id = client.servers.migrate("vm-uuid", host_id="host-uuid")
+client.tasks.wait(task_id)
+```
+
+### Get Console URL (VNC/SPICE/RDP)
+
+```python
+info = client.servers.get_console("vm-uuid")
+print(info["url"])   # Open in browser for noVNC console
+
+# SPICE console
+info = client.servers.get_console("vm-uuid", protocol="spice")
+```
+
+### Batch Operations
+
+```python
+vm_ids = ["vm-uuid-1", "vm-uuid-2", "vm-uuid-3"]
+
+# Soft delete (move to recycle bin)
+client.servers.soft_delete(vm_ids)
+
+# Restore from recycle bin
+task_id = client.servers.restore("vm-uuid-1")
+client.tasks.wait(task_id)
+
+# Other batch actions
+client.servers.batch_action(vm_ids, "start_servers_action")
+client.servers.batch_action(vm_ids, "stop_servers_action")
+client.servers.batch_action(vm_ids, "reboot_servers_action")
 ```
 
 ### Disk Management
