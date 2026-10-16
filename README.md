@@ -250,13 +250,24 @@ for subnet in client.networks.list_subnets(vpc_id="vpc-uuid"):
 ### Elastic IP
 
 ```python
-# Allocate
-eip = client.eips.allocate(az_id="az-uuid", bandwidth_mb=100)
+# List EIP pools
+pools = client.eips.list_pools()
+
+# Allocate (bandwidth in Mbps, converted to kbps for the API)
+eip = client.eips.allocate(
+    project_id="tenant-id",
+    bandwidth_mb=100,
+    floatingip_pool_id=pools[0]["id"],
+)
 eip_id = eip["id"]
 
-# Bind to a VM
-task_id = client.eips.bind(eip_id, server_id="vm-uuid")
+# Bind to a VM NIC
+task_id = client.eips.bind(eip_id, vpc_id="vpc-uuid", port_id="port-uuid")
 client.tasks.wait(task_id)
+
+# Bound / unbound EIPs
+for e in client.eips.list_bound():
+    print(e["floating_ip"], e["binding_info"]["ip_address"])
 
 # Unbind and release
 client.eips.unbind(eip_id)

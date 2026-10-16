@@ -559,14 +559,16 @@ for s in client.networks.list_subnets(vpc_id=vpc["id"]):
         <div class="label"><span class="dot"></span>Code</div>
 <pre><code class="language-python"># Allocate
 eip = client.eips.allocate(
-    az_id="878b7070-...",
+    project_id="a4020e23...",
     bandwidth_mb=100,
-    name="web-eip-01",
+    floatingip_pool_id="7af91739-...",
 )
 eip_id = eip["id"]
 
-# Bind to a VM
-task_id = client.eips.bind(eip_id, server_id="vm-uuid")
+# Bind to a VM NIC
+task_id = client.eips.bind(
+    eip_id, vpc_id="vpc-uuid", port_id="port-uuid"
+)
 client.tasks.wait(task_id)
 
 # Update bandwidth
@@ -580,11 +582,11 @@ client.eips.release(eip_id)</code></pre>
         <div class="label"><span class="dot green"></span>Response</div>
 <pre><code class="language-json">// allocate()
 {
-  "id": "eip-c9f3a217-4b8d-11ef-9021",
-  "ip": "203.0.113.45",
-  "status": "inactive",
-  "bandwidth_mb": 100,
-  "az_id": "878b7070-6d87-409a-a141"
+  "id": "d46425c8-ad41-406f-a4b1-4e784ac0ff2a",
+  "floating_ip": "203.0.113.45",
+  "floatingip_pool_id": "7af91739-e9c1-4704-8ec2",
+  "port_id": "1bd55d42-d064-4cf0-ac22",
+  "bandwidth": {"qos_uplink": 100000, "qos_downlink": 100000}
 }
 
 // bind() — returns task_id
@@ -735,7 +737,7 @@ except SCPTimeoutError as e:
         <tr><td><code>client.images</code></td><td>list_all, get, find_by_name, list_iso, list_acloud</td></tr>
         <tr><td><code>client.volumes</code></td><td>list_all, get, create, delete, resize, list_available, list_attached</td></tr>
         <tr><td><code>client.networks</code></td><td>VPC: list, create, get, delete · Subnet: list, create, get, delete</td></tr>
-        <tr><td><code>client.eips</code></td><td>allocate, bind, unbind, release, update_bandwidth</td></tr>
+        <tr><td><code>client.eips</code></td><td>allocate, bind, unbind, release, update_bandwidth, list_pools</td></tr>
         <tr><td><code>client.system</code></td><td>version, platform_info, list_all_hosts, get_host, list_host_interfaces</td></tr>
       </tbody>
     </table>
