@@ -19,6 +19,49 @@ import requests
 from sangfor_scp.exceptions import SCPAuthError
 
 
+def fetch_public_key_modulus(host: str, verify_ssl: bool = False, timeout: int = 30) -> str:
+    """GET /janus/v2/public-key → RSA modulus (hex). Kimlik doğrulama gerektirmez."""
+    host = host.rstrip("/")
+    resp = requests.get(f"{host}/janus/v2/public-key", verify=verify_ssl, timeout=timeout)
+    if resp.status_code != 200:
+        # Eski endpoint'i dene
+        resp = requests.get(f"{host}/janus/public-key", verify=verify_ssl, timeout=timeout)
+    if resp.status_code != 200:
+        raise SCPAuthError(
+            message=f"Failed to fetch public key: {resp.text}",
+            status_code=resp.status_code,
+        )
+
+    data = resp.json()
+    modulus = data.get("data", {}).get("public_key") or data.get("public_key", "")
+    if not modulus:
+        raise SCPAuthError(message="Public key modulus not found in response.")
+    # Belgede \n ile bitebilir, temizle
+    return modulus.strip().rstrip("\\n")
+
+
+def encrypt_password(password: str, modulus: str) -> str:
+    """
+    SCP public key ile RSA PKCS1_v1_5 şifreleme (login ve VM parolası için).
+    pycryptodome gerektirir.
+    """
+    try:
+        from binascii import a2b_hex, b2a_hex
+        from Crypto.PublicKey import RSA
+        from Crypto.Cipher import PKCS1_v1_5
+        from Crypto.Util.number import bytes_to_long
+    except ImportError as exc:
+        raise ImportError(
+            "Password encryption requires pycryptodome. "
+            "Install it with: pip install pycryptodome"
+        ) from exc
+
+    n = bytes_to_long(a2b_hex(modulus))
+    public_key = RSA.construct((n, 0x10001)).publickey()
+    encrypted = PKCS1_v1_5.new(public_key).encrypt(password.encode("utf-8"))
+    return b2a_hex(encrypted).decode("utf-8")
+
+
 class TokenAuth:
     """
     Token tabanlı SCP kimlik doğrulama yöneticisi.
@@ -124,53 +167,9 @@ class TokenAuth:
 
     def _fetch_public_key_modulus(self) -> str:
         """GET /janus/v2/public-key → modulus string"""
-        resp = requests.get(
-            f"{self.host}/janus/v2/public-key",
-            verify=self.verify_ssl,
-            timeout=self.timeout,
-        )
-        if resp.status_code != 200:
-            # Eski endpoint'i dene
-            resp = requests.get(
-                f"{self.host}/janus/public-key",
-                verify=self.verify_ssl,
-                timeout=self.timeout,
-            )
-        if resp.status_code != 200:
-            raise SCPAuthError(
-                message=f"Failed to fetch public key: {resp.text}",
-                status_code=resp.status_code,
-            )
-
-        data = resp.json()
-        modulus = data.get("data", {}).get("public_key") or data.get("public_key", "")
-        if not modulus:
-            raise SCPAuthError(message="Public key modulus not found in response.")
-        # Belgede \n ile bitebilir, temizle
-        return modulus.strip().rstrip("\\n")
+        return fetch_public_key_modulus(self.host, self.verify_ssl, self.timeout)
 
     @staticmethod
     def _encrypt_password(password: str, modulus: str) -> str:
-        """
-        RSA PKCS1_v1_5 ile şifreleme.
-        pycryptodome: from Crypto.PublicKey import RSA
-        """
-        try:
-            from binascii import a2b_hex, b2a_hex
-            from Crypto.PublicKey import RSA
-            from Crypto.Cipher import PKCS1_v1_5
-            from Crypto.Util.number import bytes_to_long
-
-            e = int(0x10001)
-            n = bytes_to_long(a2b_hex(modulus))
-            rsa_key = RSA.construct((n, e))
-            public_key = rsa_key.publickey()
-            cipher = PKCS1_v1_5.new(public_key)
-            encrypted = cipher.encrypt(password.encode("utf-8"))
-            return b2a_hex(encrypted).decode("utf-8")
-
-        except ImportError as exc:
-            raise ImportError(
-                "Token authentication requires pycryptodome. "
-                "Install it with: pip install pycryptodome"
-            ) from exc
+        """RSA PKCS1_v1_5 ile şifreleme."""
+        return encrypt_password(password, modulus)

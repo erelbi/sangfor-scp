@@ -18,8 +18,10 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Optional
 
+import requests
+
 from sangfor_scp.base import BaseResource
-from sangfor_scp.exceptions import SCPTaskError, SCPTimeoutError
+from sangfor_scp.exceptions import SCPServerError, SCPTaskError, SCPTimeoutError
 
 if TYPE_CHECKING:
     pass
@@ -84,7 +86,12 @@ class TasksResource(BaseResource):
         last_data: Optional[dict] = None
 
         while time.monotonic() < deadline:
-            task_data = self.get(task_id)
+            try:
+                task_data = self.get(task_id)
+            except (requests.ConnectionError, requests.Timeout, SCPServerError):
+                # Geçici ağ/sunucu hatası — task sunucuda sürüyor, tekrar dene
+                time.sleep(poll_interval)
+                continue
             last_data = task_data
             status = task_data.get("status", "")
             progress = task_data.get("progress", 0)

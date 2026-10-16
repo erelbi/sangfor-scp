@@ -32,3 +32,6 @@ env/
 
 # Claude
 .claude/
+
+# Ortama özel spec dosyaları (gerçek pool/IP/şablon adları)
+examples/specs/local/

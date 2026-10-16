@@ -17,6 +17,10 @@ Kapsanan endpoint'ler:
     POST   /janus/20180725/subnets        → Subnet oluştur
     GET    /janus/20180725/subnets/{id}   → Subnet detayı
     DELETE /janus/20180725/subnets/{id}   → Subnet sil
+
+  Klasik ağ (VPC'siz ortamlar):
+    GET    /janus/20190725/classic-bvswitches → Edge bağlantılı sanal switch'ler
+                                                (VLAN grupları dahil)
 """
 from __future__ import annotations
 
@@ -45,6 +49,7 @@ class NetworksResource(PaginatedResource):
 
     _VPC_BASE    = "/janus/20180725/vpcs"
     _SUBNET_BASE = "/janus/20180725/subnets"
+    _BVSWITCH_BASE = "/janus/20190725/classic-bvswitches"
 
     # ------------------------------------------------------------------ #
     # PaginatedResource — VPC için varsayılan _list_page                  #
@@ -270,3 +275,88 @@ class NetworksResource(PaginatedResource):
             if subnet.get("name") == name:
                 return subnet
         return None
+
+    # ------------------------------------------------------------------ #
+    # Klasik ağ                                                           #
+    # ------------------------------------------------------------------ #
+
+    def list_classic_switches(self, **filters: Any) -> Iterator[Dict[str, Any]]:
+        """
+        Klasik ağdaki edge bağlantılı sanal switch'leri (bvswitch) iterate eder.
+
+        Her switch'in "vlan_group" listesi VM NIC'inin bağlanacağı portları
+        içerir (id, name, type=access|trunk, vlan_range, count).
+
+        Filtreler:
+            az_id: Resource pool ID
+        """
+        page_num = 0
+        while True:
+            params = {
+                "page_num": page_num,
+                "page_size": 100,
+                **{k: v for k, v in filters.items() if v is not None},
+            }
+            result = self._get(self._BVSWITCH_BASE, params=params)
+            if isinstance(result, list):
+                yield from result
+                return
+            yield from result.get("data", [])
+            next_page = result.get("next_page_num", "")
+            if next_page == "":
+                return
+            page_num = int(next_page)
+
+    def find_vlan_group(
+        self,
+        name: str,
+        az_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Ada göre VLAN grubu arar (ör. "vlan100").
+        Farklı resource pool'larda aynı adlı switch/VLAN olabilir;
+        doğru eşleşme için az_id verin.
+
+        Returns:
+            {"switch_id": ..., "switch_name": ..., "id": ..., "name": ..., ...}
+            veya None
+        """
+        for switch in self.list_classic_switches(az_id=az_id):
+            for group in switch.get("vlan_group") or []:
+                if group.get("name") == name:
+                    return {"switch_id": switch["id"], "switch_name": switch.get("name"), **group}
+        return None
+
+    @staticmethod
+    def classic_nic(
+        switch_id: str,
+        vlan_group_id: str,
+        ip_address: str,
+        netmask: Optional[str] = None,
+        gateway: Optional[str] = None,
+        dns: Optional[List[str]] = None,
+        vif_id: str = "net0",
+        model: str = "virtio",
+        connect: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        servers.create(networks=[...]) için klasik ağ NIC tanımı üretir.
+
+        SCP klasik ağda port_id (VLAN grubu ID) ve ip_info'yu zorunlu tutar
+        (hata 0x12009001005F). NIC'siz VM için networks=[] geçin.
+        """
+        ip_info: Dict[str, Any] = {"ip_address": ip_address}
+        if netmask is not None:
+            ip_info["netmask"] = netmask
+        if gateway is not None:
+            ip_info["gateway"] = gateway
+        if dns is not None:
+            ip_info["dns"] = dns
+        return {
+            "vif_id": vif_id,
+            "connect": 1 if connect else 0,
+            "device_id": switch_id,
+            "port_id": vlan_group_id,
+            "model": model,
+            "ip_info": ip_info,
+        }

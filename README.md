@@ -126,6 +126,43 @@ vm_id = result["uuids"][0]
 print(f"VM created: {vm_id}")
 ```
 
+### Declarative Provisioning (Terraform-style)
+
+Describe the whole machine once — names are resolved to IDs, the spec is
+validated (image active in pool, IP not in use, VLAN exists, disk sizes),
+and `apply` waits until the VM is running.
+
+```yaml
+# examples/specs/web-01.yaml
+name: web-01
+resource_pool: POOL-A
+image: ubuntu-2404-template            # aCloud template with vmtools
+storage_tag: High Performance Storage
+cores: 2
+memory_gb: 4
+disks: [{size_gb: 150}, {size_gb: 20}]
+networks:
+  - {switch: edge-switch-1, vlan: vlan100, ip: 192.168.100.50, netmask: 255.255.255.0, gateway: 192.168.100.1}
+hostname: web-01
+power_on: true
+```
+
+```bash
+python examples/provision.py plan    examples/specs/web-01.yaml
+SCP_VM_PASSWORD=... python examples/provision.py apply examples/specs/web-01.yaml
+python examples/provision.py destroy examples/specs/web-01.yaml
+```
+
+```python
+plan = client.provisioner.plan(spec)   # read-only; action: create | no-op | drift
+print(plan.summary())
+vm = client.provisioner.apply(spec, on_event=print)
+client.provisioner.destroy(spec)
+```
+
+Re-running `apply` for an existing VM is a no-op; differences from the spec
+are reported as drift and never changed automatically.
+
 ### Rename / Update a VM
 
 ```python
@@ -245,6 +282,23 @@ result = client.networks.create_subnet(
 # List subnets in a VPC
 for subnet in client.networks.list_subnets(vpc_id="vpc-uuid"):
     print(subnet["id"], subnet["cidr"])
+```
+
+### Classic Network (non-VPC environments)
+
+```python
+# Find the VLAN group (port) on an edge-connected virtual switch
+group = client.networks.find_vlan_group("vlan100", az_id="az-uuid")
+
+# Classic network NICs require port_id and ip_info
+nic = client.networks.classic_nic(
+    switch_id=group["switch_id"],
+    vlan_group_id=group["id"],
+    ip_address="192.168.100.50",
+    netmask="255.255.255.0",
+    gateway="192.168.100.1",
+)
+result = client.servers.create(..., networks=[nic])
 ```
 
 ### Elastic IP

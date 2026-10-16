@@ -124,10 +124,14 @@ class ServersResource(PaginatedResource):
         power_on: bool = True,
         location: Optional[Dict[str, Any]] = None,
         advance_param: Optional[Dict[str, Any]] = None,
+        api_version: str = "20180725",
         **extra: Any,
     ) -> Dict[str, Any]:
         """
         Yeni VM(ler) oluşturur. Asenkron işlem, task_id döner.
+
+        advance_param.bios (SEABIOS/UEFI), graphic_type ve derive_mode
+        (full/fast) için api_version="20210725" kullanın (SCP 6.8.80+).
 
         Args:
             az_id:          Resource pool ID
@@ -157,6 +161,7 @@ class ServersResource(PaginatedResource):
             power_on:       Oluşturma sonrası güç aç (0/1)
             location:       {"id": "cluster"} (varsayılan cluster)
             advance_param:  Gelişmiş parametreler dict
+            api_version:    Create endpoint sürümü (20180725, 20210725, ...)
 
         Returns:
             {
@@ -187,7 +192,7 @@ class ServersResource(PaginatedResource):
 
         body.update(extra)
 
-        return self._post(self._BASE, body=body, idempotent=True)
+        return self._post(f"/janus/{api_version}/servers", body=body, idempotent=True)
 
     def update(
         self,
@@ -268,20 +273,21 @@ class ServersResource(PaginatedResource):
     def delete(
         self,
         server_id: str,
-        delete_disks: bool = True,
+        permanent: bool = False,
     ) -> Optional[str]:
         """
         VM'i siler. Asenkron işlem, task_id döner.
 
         Args:
-            server_id:    VM ID
-            delete_disks: İlişkili diskleri de sil (varsayılan True)
+            server_id: VM ID
+            permanent: True → kalıcı sil, False → geri dönüşüm kutusuna taşı
+                       (SCP varsayılanı, restore() ile geri alınabilir)
 
         Returns:
             task_id (str) veya None
         """
-        params = {"delete_disk": 1 if delete_disks else 0}
-        result = self._delete(f"{self._BASE}/{server_id}", params=params)
+        body = {"force": 1 if permanent else 0}
+        result = self._delete(f"{self._BASE}/{server_id}", body=body)
         if result and isinstance(result, dict):
             return result.get("task_id")
         return None
@@ -502,6 +508,51 @@ class ServersResource(PaginatedResource):
         body.update(extra)
         return self._post(f"{self._BASE}/{server_id}/clone", body=body, idempotent=True)
 
+    def clone_v2(
+        self,
+        server_id: str,
+        name: str,
+        power_on: bool = False,
+        count: int = 1,
+        clone_type: Optional[str] = None,
+        storage_tag_id: Optional[str] = None,
+        networks: Optional[List[Dict[str, Any]]] = None,
+        description: str = "",
+        **extra: Any,
+    ) -> Dict[str, Any]:
+        """
+        VM klonlar (SCP 6.3.70+). Klonlama sırasında NIC/IP atanabilir.
+
+        Args:
+            server_id:      Kaynak VM (şablon) ID
+            name:           Yeni VM adı
+            power_on:       Klon sonrası aç
+            count:          Kopya sayısı (max 20)
+            clone_type:     full | fast | link
+            storage_tag_id: Hedef storage tag
+            networks:       NIC listesi (classic_nic() çıktısı gibi; ip_info dahil)
+
+        Returns:
+            {"task_id": "...", "uuids": [...]}  (return_uuids=1 ile)
+
+        Endpoint: POST /janus/20190725/servers/{id}/clone
+        """
+        body: Dict[str, Any] = {
+            "name": name,
+            "power_on": 1 if power_on else 0,
+            "count": count,
+            "description": description,
+            "advance_param": {"return_uuids": 1},
+        }
+        if clone_type is not None:
+            body["clone_type"] = clone_type
+        if storage_tag_id is not None:
+            body["storage_tag_id"] = storage_tag_id
+        if networks is not None:
+            body["networks"] = networks
+        body.update(extra)
+        return self._post(f"/janus/20190725/servers/{server_id}/clone", body=body, idempotent=True)
+
     def migrate(
         self,
         server_id: str,
@@ -564,20 +615,31 @@ class ServersResource(PaginatedResource):
         }
         return self._post(f"{self._BASE}/{server_id}/remote-consoles", body=body)
 
-    def reset_password(self, server_id: str, encrypted_password: str) -> None:
+    def reset_password(self, server_id: str, encrypted_password: str) -> Optional[str]:
         """
-        VM parolasını sıfırlar.
+        VM parolasını sıfırlar (vmtools gerekir). task_id döner.
 
         Args:
             server_id:          VM ID
             encrypted_password: RSA ile şifrelenmiş yeni parola
 
-        Not: Parolanın SCP public key ile RSA şifrelenmiş olması gerekir.
+        Not: Parolanın SCP public key ile RSA şifrelenmiş olması gerekir;
+        düz metin parola için set_password() kullanın.
 
         Endpoint: POST /janus/20180725/servers/{id}/server-password
         """
         body = {"password": encrypted_password}
-        self._post(f"{self._BASE}/{server_id}/server-password", body=body)
+        result = self._post(f"{self._BASE}/{server_id}/server-password", body=body)
+        if result and isinstance(result, dict):
+            return result.get("task_id")
+        return None
+
+    def set_password(self, server_id: str, password: str) -> Optional[str]:
+        """Düz metin parolayı SCP public key ile şifreleyip VM parolasını sıfırlar. task_id döner."""
+        from sangfor_scp.auth.token import encrypt_password, fetch_public_key_modulus
+
+        modulus = fetch_public_key_modulus(self._client.host, self._client.verify_ssl)
+        return self.reset_password(server_id, encrypt_password(password, modulus))
 
     # ------------------------------------------------------------------ #
     # Bilgi sorguları                                                     #

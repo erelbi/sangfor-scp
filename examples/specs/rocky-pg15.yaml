@@ -1,0 +1,22 @@
+# Rocky 9.7 + PostgreSQL 15 şablonundan klon
+# python examples/provision.py plan examples/specs/rocky-pg15.yaml
+name: sdk-rocky-pg15-01
+resource_pool: POOL-A
+source_vm: rocky-9-postgresql-15-template   # VM şablonu (SeaBIOS, 50 GB)
+clone_type: full                # full | fast | link
+
+cores: 2
+sockets: 1
+memory_gb: 4
+
+networks:
+  - switch: edge-switch-1
+    vlan: vlan100
+    ip: 192.168.100.51
+    netmask: 255.255.255.0
+    gateway: 192.168.100.1
+    dns: [8.8.8.8]
+
+# password: ...                 # veya SCP_VM_PASSWORD ortam değişkeni
+description: sangfor-scp provision testi (Rocky PG15 klon)
+power_on: true

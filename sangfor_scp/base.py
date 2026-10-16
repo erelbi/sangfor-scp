@@ -55,8 +55,9 @@ class BaseResource:
         self,
         path: str,
         params: Optional[Dict[str, Any]] = None,
+        body: Optional[Dict[str, Any]] = None,
     ) -> Any:
-        return self._client.request("DELETE", path, params=params)
+        return self._client.request("DELETE", path, params=params, json=body)
 
 
 class PaginatedResource(BaseResource, ABC):

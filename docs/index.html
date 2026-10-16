@@ -267,7 +267,7 @@ client = SCPClient(
     print(vm["id"], vm["name"], vm["status"])
 
 # Filter by resource pool
-for vm in client.servers.list_all(az_id="878b7070-6d87-409a-a141-7224fc7bcedd"):
+for vm in client.servers.list_all(az_id="3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13"):
     print(vm["name"])
 
 # Count without fetching all
@@ -283,7 +283,7 @@ print(f"Total VMs: {total}")</code></pre>
   "status": "running",
   "cores": 4,
   "memory_mb": 8192,
-  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd",
+  "az_id": "3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13",
   "host_id": "host-90e2bad3dfa4",
   "disks": [{ "id": "ide0", "size_mb": 51200 }],
   "networks": [{ "ip": "192.168.1.101", "mac": "fa:16:3e:ab:cd:ef" }]
@@ -316,7 +316,7 @@ print(f"CPU: {vm['cores']}  RAM: {vm['memory_mb']}MB")</code></pre>
       <div class="code-block">
         <div class="label"><span class="dot"></span>Code</div>
 <pre><code class="language-python">result = client.servers.create(
-    az_id="878b7070-6d87-409a-a141-7224fc7bcedd",
+    az_id="3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13",
     image_id="98a5f5a0-665a-4d66-ba9e-985fc860b7eb",
     storage_tag_id="00000000-0000-0000-0000-000000000000",
     cores=4,
@@ -387,14 +387,14 @@ print(f"Running   : {ov['server']['running_count']}")
 print(f"Total hosts: {ov['host']['total']}")
 
 # Storage tags in a pool
-tags = client.resource_pools.storage_tags(az_id="878b7070-...")
+tags = client.resource_pools.storage_tags(az_id="3f6c2a1e-...")
 for t in tags:
     print(t["id"], t["name"])</code></pre>
       </div>
       <div class="code-block">
         <div class="label"><span class="dot green"></span>Response</div>
 <pre><code class="language-json">// list_all() item
-{ "id": "878b7070-6d87-409a-a141-7224fc7bcedd", "name": "DATACENTER-A" }
+{ "id": "3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13", "name": "DATACENTER-A" }
 
 // overview()
 {
@@ -443,7 +443,7 @@ if img:
   "os_type": "linux",
   "size_mb": 1024,
   "status": "active",
-  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd"
+  "az_id": "3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13"
 }</code></pre>
       </div>
     </div>
@@ -457,7 +457,7 @@ if img:
         <div class="label"><span class="dot"></span>Code</div>
 <pre><code class="language-python"># Create a standalone disk
 result = client.volumes.create(
-    az_id="878b7070-6d87-409a-a141-7224fc7bcedd",
+    az_id="3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13",
     storage_tag_id="00000000-0000-0000-0000-000000000000",
     size_mb=102400,   # 100 GB
     name="data-disk-01",
@@ -492,7 +492,7 @@ for d in disks:
   "name": "data-disk-01",
   "status": "available",
   "size_mb": 102400,
-  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd"
+  "az_id": "3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13"
 }</code></pre>
       </div>
     </div>
@@ -510,7 +510,7 @@ for vpc in client.networks.list_vpcs():
 
 # Create VPC
 vpc = client.networks.create_vpc(
-    az_id="878b7070-...",
+    az_id="3f6c2a1e-...",
     name="prod-vpc",
     cidr="10.0.0.0/16",
 )
@@ -518,7 +518,7 @@ vpc = client.networks.create_vpc(
 # Create Subnet
 subnet = client.networks.create_subnet(
     vpc_id=vpc["id"],
-    az_id="878b7070-...",
+    az_id="3f6c2a1e-...",
     cidr="10.0.1.0/24",
     name="prod-subnet-a",
     gateway_ip="10.0.1.1",
@@ -536,7 +536,7 @@ for s in client.networks.list_subnets(vpc_id=vpc["id"]):
   "name": "prod-vpc",
   "cidr": "10.0.0.0/16",
   "status": "active",
-  "az_id": "878b7070-6d87-409a-a141"
+  "az_id": "3f6c2a1e-9b8d-4c7a-8e21"
 }
 
 // Subnet object
@@ -653,7 +653,7 @@ for host in client.system.list_all_hosts():
 
 # Filter by AZ or status
 running = list(client.system.list_all_hosts(
-    az_id="878b7070-...",
+    az_id="3f6c2a1e-...",
     status="running",
 ))
 print(f"{len(running)} running hosts")
@@ -674,7 +674,7 @@ for i in ifaces:
   "id": "host-90e2bad3dfa4",
   "name": "10.10.10.101",
   "status": "running",
-  "az_id": "878b7070-6d87-409a-a141-7224fc7bcedd",
+  "az_id": "3f6c2a1e-9b8d-4c7a-8e21-5d4f0b9a7c13",
   "cpu_total": 64,
   "cpu_used": 28,
   "memory_total_mb": 196608,
@@ -736,9 +736,10 @@ except SCPTimeoutError as e:
         <tr><td><code>client.tenants</code></td><td>list_all, get, find_by_name, list_by_resource_pool</td></tr>
         <tr><td><code>client.images</code></td><td>list_all, get, find_by_name, list_iso, list_acloud</td></tr>
         <tr><td><code>client.volumes</code></td><td>list_all, get, create, delete, resize, list_available, list_attached</td></tr>
-        <tr><td><code>client.networks</code></td><td>VPC: list, create, get, delete · Subnet: list, create, get, delete</td></tr>
+        <tr><td><code>client.networks</code></td><td>VPC: list, create, get, delete · Subnet: list, create, get, delete · Classic: list_classic_switches, find_vlan_group, classic_nic</td></tr>
         <tr><td><code>client.eips</code></td><td>allocate, bind, unbind, release, update_bandwidth, list_pools</td></tr>
         <tr><td><code>client.system</code></td><td>version, platform_info, list_all_hosts, get_host, list_host_interfaces</td></tr>
+        <tr><td><code>client.provisioner</code></td><td>plan, apply, destroy — declarative (Terraform-style) VM provisioning from a spec</td></tr>
       </tbody>
     </table>
   </section>

@@ -1,0 +1,31 @@
+# Örnek VM tanımı — python examples/provision.py plan examples/specs/web-01.yaml
+name: sdk-web-01
+resource_pool: POOL-A
+image: ubuntu-2404-template              # aCloud şablonu (vmtools ile hostname/IP/parola enjeksiyonu)
+storage_tag: High Performance Storage
+
+cores: 2
+sockets: 1
+memory_gb: 4
+
+disks:
+  - size_gb: 150                # sistem diski (şablondan küçük olamaz)
+  - size_gb: 20                 # ek veri diski
+
+networks:
+  - switch: edge-switch-1
+    vlan: vlan100
+    ip: 192.168.100.50
+    netmask: 255.255.255.0
+    gateway: 192.168.100.1
+    dns: [8.8.8.8]
+
+hostname: sdk-web-01
+# password: ...                 # veya SCP_VM_PASSWORD ortam değişkeni
+description: sangfor-scp provision testi
+power_on: true
+
+# Donanım (SCP 6.8.80+)
+bios: UEFI                      # şablon UEFI ile kurulduysa SEABIOS "Booting from Hard Disk"te kalır
+graphic_type: qxl               # UEFI + vmware ekran kartında konsol "Mounted /boot/efi"de donar
+derive_mode: full               # full: şablondan bağımsız tam kopya | fast: bağlı klon

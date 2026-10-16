@@ -116,6 +116,7 @@ class SCPClient:
         from sangfor_scp.resources.eips import EIPsResource
         from sangfor_scp.resources.tasks import TasksResource
         from sangfor_scp.resources.system import SystemResource
+        from sangfor_scp.provision import Provisioner
 
         self.servers: ServersResource = ServersResource(self)
         self.resource_pools: ResourcePoolsResource = ResourcePoolsResource(self)
@@ -126,6 +127,7 @@ class SCPClient:
         self.eips: EIPsResource = EIPsResource(self)
         self.tasks: TasksResource = TasksResource(self)
         self.system: SystemResource = SystemResource(self)
+        self.provisioner: Provisioner = Provisioner(self)
 
     # ------------------------------------------------------------------ #
     # Kimlik doğrulama                                                    #
