@@ -78,6 +78,22 @@ Specs and notes that contain real environment values belong in
 
 ## Releases
 
-Maintainers bump the version in both `pyproject.toml` and
-`sangfor_scp/__init__.py`, tag `vX.Y.Z`, and publish to
-[PyPI](https://pypi.org/project/sangfor-scp/).
+Releases are automated by `.github/workflows/release.yml`:
+
+```bash
+packaging/bump-version.sh 0.5.0 "Short summary of the release"
+git commit -am "release: v0.5.0"
+git tag -a v0.5.0 -m "v0.5.0"
+git push origin main v0.5.0
+```
+
+`bump-version.sh` updates the version in `pyproject.toml`,
+`sangfor_scp/__init__.py`, the RPM spec and `debian/changelog`. Pushing the tag
+runs the tests, builds the sdist/wheel, the RPM (Fedora) and the DEB (Debian),
+installs them in clean Fedora, Debian and Ubuntu containers, and attaches
+everything plus `SHA256SUMS` to a GitHub Release. When the repository variable
+`PUBLISH_PYPI` is `true`, the same run publishes to
+[PyPI](https://pypi.org/project/sangfor-scp/) via trusted publishing.
+
+Packages can be built locally the same way: `packaging/build.sh` and
+`packaging/build.sh test`.

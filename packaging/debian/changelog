@@ -1,0 +1,6 @@
+python-sangfor-scp (0.4.1-1) unstable; urgency=medium
+
+  * Initial Debian package.
+  * Token authentication also works with pycryptodomex (Cryptodome).
+
+ -- sangfor-scp maintainers <erelbi@users.noreply.github.com>  Mon, 19 Oct 2026 12:00:00 +0300

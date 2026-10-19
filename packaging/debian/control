@@ -1,0 +1,35 @@
+Source: python-sangfor-scp
+Section: python
+Priority: optional
+Maintainer: sangfor-scp maintainers <erelbi@users.noreply.github.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools (>= 77),
+ python3-requests,
+ python3-urllib3,
+ python3-pytest <!nocheck>,
+Standards-Version: 4.7.0
+Homepage: https://github.com/erelbi/sangfor-scp
+Vcs-Browser: https://github.com/erelbi/sangfor-scp
+Vcs-Git: https://github.com/erelbi/sangfor-scp.git
+Rules-Requires-Root: no
+
+Package: python3-sangfor-scp
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Recommends:
+ python3-pycryptodome,
+Description: Python client for the Sangfor Cloud Platform (SCP) Open-API
+ sangfor-scp is a Python client library for the Sangfor Cloud Platform (SCP)
+ Open-API. It covers virtual machines (create, clone, migrate, power,
+ console), networks, images, volumes, elastic IPs, tasks, alarms and
+ monitoring metrics, with EC2 (AWS4-HMAC-SHA256) and token authentication,
+ automatic pagination and async task polling.
+ .
+ It also ships the scp-health command, a read-only platform health report
+ (alarms, VM disk usage, failed tasks, host CPU generations, capacity).

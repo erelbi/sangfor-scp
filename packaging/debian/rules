@@ -1,0 +1,7 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=sangfor-scp
+export PYBUILD_TEST_ARGS={dir}/tests
+
+%:
+	dh $@ --buildsystem=pybuild

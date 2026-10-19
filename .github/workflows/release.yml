@@ -1,0 +1,111 @@
+name: Release
+
+# vX.Y.Z etiketi push edildiğinde:
+#   1. testler çalışır, sürüm numaraları (etiket, pyproject, spec, debian) kontrol edilir
+#   2. sdist + wheel, RPM (Fedora) ve DEB (Debian) derlenir
+#   3. paketler temiz Fedora / Debian / Ubuntu container'larında kurulup denenir
+#   4. GitHub Release oluşturulur ve tüm paketler eklenir
+#   5. (isteğe bağlı) PyPI'ye yüklenir — repo değişkeni PUBLISH_PYPI=true ise
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Var olan etiket (ör. v0.4.1) — Release'i yeniden oluşturur"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: python -m pip install --upgrade build pytest requests urllib3
+
+      - name: Check versions
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Etiket $TAG ile pyproject sürümü $VERSION uyuşmuyor"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Unit tests
+        run: python -m pytest -q tests
+
+      - name: Build sdist and wheel
+        run: python -m build --outdir dist/python
+
+      - name: Build RPM and DEB
+        run: packaging/build.sh all
+
+      - name: Smoke-test packages
+        run: packaging/build.sh test
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: |
+            dist/python/*
+            dist/packages/*
+          if-no-files-found: error
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: dist
+
+      - name: Checksums
+        run: |
+          cd dist
+          find . -type f \( -name '*.rpm' -o -name '*.deb' -o -name '*.whl' -o -name '*.tar.gz' \) \
+            -exec sha256sum {} + | sed 's#  \./[^/]*/#  #' > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/python/*
+            dist/packages/*
+            dist/SHA256SUMS
+
+  pypi:
+    needs: build
+    if: vars.PUBLISH_PYPI == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/project/sangfor-scp/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/python/
+          skip-existing: true

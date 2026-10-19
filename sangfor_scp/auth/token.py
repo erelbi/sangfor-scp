@@ -43,18 +43,27 @@ def fetch_public_key_modulus(host: str, verify_ssl: bool = False, timeout: int =
 def encrypt_password(password: str, modulus: str) -> str:
     """
     SCP public key ile RSA PKCS1_v1_5 şifreleme (login ve VM parolası için).
-    pycryptodome gerektirir.
+    pycryptodome (Crypto) veya pycryptodomex (Cryptodome) gerektirir;
+    Fedora/RHEL yalnızca pycryptodomex paketler.
     """
+    from binascii import a2b_hex, b2a_hex
+
     try:
-        from binascii import a2b_hex, b2a_hex
         from Crypto.PublicKey import RSA
         from Crypto.Cipher import PKCS1_v1_5
         from Crypto.Util.number import bytes_to_long
-    except ImportError as exc:
-        raise ImportError(
-            "Password encryption requires pycryptodome. "
-            "Install it with: pip install pycryptodome"
-        ) from exc
+    except ImportError:
+        try:
+            from Cryptodome.PublicKey import RSA  # type: ignore[no-redef]
+            from Cryptodome.Cipher import PKCS1_v1_5  # type: ignore[no-redef]
+            from Cryptodome.Util.number import bytes_to_long  # type: ignore[no-redef]
+        except ImportError as exc:
+            raise ImportError(
+                "Password encryption requires pycryptodome or pycryptodomex. "
+                "Install it with: pip install pycryptodome "
+                "(Fedora: dnf install python3-pycryptodomex, "
+                "Debian/Ubuntu: apt install python3-pycryptodome)"
+            ) from exc
 
     n = bytes_to_long(a2b_hex(modulus))
     public_key = RSA.construct((n, 0x10001)).publickey()

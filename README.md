@@ -55,6 +55,25 @@ With Token-based authentication support (RSA encryption):
 pip install sangfor-scp[token-auth]
 ```
 
+### RPM / DEB packages
+
+Native packages install the library system-wide together with the
+`scp-health` command. Build them in containers (podman or docker; nothing is
+installed on the host):
+
+```bash
+packaging/build.sh          # → dist/packages/*.rpm, *.deb
+packaging/build.sh test     # install & smoke-test in clean Fedora, Debian and Ubuntu containers
+```
+
+```bash
+sudo dnf install ./dist/packages/python3-sangfor-scp-*.noarch.rpm   # Fedora 44
+sudo apt install ./dist/packages/python3-sangfor-scp_*_all.deb       # Debian 13, Ubuntu 24.04
+```
+
+Token authentication additionally needs `python3-pycryptodomex` (Fedora) or
+`python3-pycryptodome` (Debian/Ubuntu); both are pulled in as recommended packages.
+
 ---
 
 ## Quick Start
