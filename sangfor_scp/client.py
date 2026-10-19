@@ -116,6 +116,8 @@ class SCPClient:
         from sangfor_scp.resources.eips import EIPsResource
         from sangfor_scp.resources.tasks import TasksResource
         from sangfor_scp.resources.system import SystemResource
+        from sangfor_scp.resources.alarms import AlarmsResource
+        from sangfor_scp.resources.metrics import MetricsResource
         from sangfor_scp.provision import Provisioner
 
         self.servers: ServersResource = ServersResource(self)
@@ -127,6 +129,8 @@ class SCPClient:
         self.eips: EIPsResource = EIPsResource(self)
         self.tasks: TasksResource = TasksResource(self)
         self.system: SystemResource = SystemResource(self)
+        self.alarms: AlarmsResource = AlarmsResource(self)
+        self.metrics: MetricsResource = MetricsResource(self)
         self.provisioner: Provisioner = Provisioner(self)
 
     # ------------------------------------------------------------------ #

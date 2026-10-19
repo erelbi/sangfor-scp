@@ -47,10 +47,11 @@ from sangfor_scp.exceptions import (
     SCPServerError,
     SCPTaskError,
     SCPTimeoutError,
+    SCPPreflightError,
 )
 from sangfor_scp.provision import Plan, SpecError
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __author__ = "Sangfor SCP API Library"
 
 __all__ = [
@@ -66,6 +67,7 @@ __all__ = [
     "SCPServerError",
     "SCPTaskError",
     "SCPTimeoutError",
+    "SCPPreflightError",
     # Provisioning
     "Plan",
     "SpecError",

@@ -12,34 +12,89 @@ Task status değerleri:
     failure   → Başarısız (-1)
     canceling → İptal ediliyor
     canceled  → İptal edildi
+
+Kapsanan endpoint'ler:
+  - GET /janus/20180725/tasks/{task_id} → Tek task durumu
+  - GET /janus/20180725/tasks           → Task (operasyon) geçmişi, sayfalı
 """
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Optional
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional
 
 import requests
 
-from sangfor_scp.base import BaseResource
+from sangfor_scp.base import PaginatedResource
 from sangfor_scp.exceptions import SCPServerError, SCPTaskError, SCPTimeoutError
 
 if TYPE_CHECKING:
     pass
 
 
-class TasksResource(BaseResource):
+_TIME_FMT = "%Y-%m-%d %H:%M:%S"
+
+
+class TasksResource(PaginatedResource):
     """
-    GET /janus/20180725/tasks/{task_id}
+    Task durumu ve operasyon geçmişi.
 
     Kullanım:
         task = client.tasks.get("task-uuid")
         result = client.tasks.wait("task-uuid", timeout=300)
+
+        # Son 30 günün başarısız task'ları (tüm kullanıcılar)
+        for t in client.tasks.list_failed(days=30):
+            print(t["begin_time"], t["action"], t["description"])
+
+        # Bir VM'in geçmişi
+        client.tasks.list(object_id="vm-uuid")
     """
 
     _BASE = "/janus/20180725/tasks"
 
     # ------------------------------------------------------------------ #
-    # Public API                                                          #
+    # Liste                                                               #
+    # ------------------------------------------------------------------ #
+
+    def _list_page(
+        self,
+        page_num: int,
+        page_size: int,
+        **filters: Any,
+    ) -> Dict[str, Any]:
+        """
+        Filtreler:
+            status:      waiting | doing | finish | failure | canceling | canceled
+            object_id:   İşlem yapılan nesne ID
+            object_type: Nesne tipi
+            az_id, project_id, user_id, user_ip
+            begin_time / end_time: "YYYY-MM-DD HH:MM:SS"
+        """
+        params = {
+            "page_num": page_num,
+            "page_size": page_size,
+            **{k: v for k, v in filters.items() if v is not None},
+        }
+        return self._get(self._BASE, params=params)
+
+    def list(self, **filters: Any) -> List[Dict[str, Any]]:
+        """Filtreye uyan tüm task'ları liste olarak döndürür (yeniden eskiye)."""
+        return list(self.list_all(**filters))
+
+    def list_since(self, days: float = 30, **filters: Any) -> Iterator[Dict[str, Any]]:
+        """Son N gündeki task'ları iterate eder."""
+        now = datetime.now()
+        filters.setdefault("begin_time", (now - timedelta(days=days)).strftime(_TIME_FMT))
+        filters.setdefault("end_time", now.strftime(_TIME_FMT))
+        return self.list_all(**filters)
+
+    def list_failed(self, days: float = 30, **filters: Any) -> List[Dict[str, Any]]:
+        """Son N gündeki başarısız (status=failure) task'lar."""
+        return list(self.list_since(days, status="failure", **filters))
+
+    # ------------------------------------------------------------------ #
+    # Tek task                                                            #
     # ------------------------------------------------------------------ #
 
     def get(self, task_id: str) -> dict:

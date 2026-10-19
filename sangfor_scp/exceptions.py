@@ -78,6 +78,14 @@ class SCPTimeoutError(SCPError):
         self.timeout = timeout
 
 
+class SCPPreflightError(SCPError):
+    """İşlem API'ye gönderilmeden önce yapılan kontrol başarısız (ör. CPU uyumsuzluğu)."""
+
+    def __init__(self, message: str = "", problems: Optional[list] = None):
+        super().__init__(message)
+        self.problems = problems or []
+
+
 _STATUS_TO_EXCEPTION = {
     400: SCPBadRequestError,
     401: SCPAuthError,

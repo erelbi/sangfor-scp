@@ -14,7 +14,8 @@ Kapsanan endpoint'ler:
   - POST   /janus/20180725/servers/{id}/suspend           → VM askıya al
   - POST   /janus/20180725/servers/{id}/restore           → VM geri yükle (çöp kutusundan)
   - POST   /janus/20180725/servers/{id}/clone             → VM klonla
-  - POST   /janus/20180725/servers/{id}/migrate           → VM taşı
+  - POST   /janus/20180725/servers/{id}/migrate           → VM taşı (CPU uyumluluk ön kontrolü ile)
+  - GET    /janus/20240725/servers/{id}                   → Ayrıntılı yapılandırma (cpu_type vb.)
   - POST   /janus/20180725/servers/{id}/remote-consoles   → Konsol URL'i al
   - POST   /janus/20180725/servers/{id}/server-password   → Parola sıfırla
   - POST   /janus/20180725/servers/{id}/action            → Disk ekle/çıkar (eski yöntem)
@@ -553,31 +554,176 @@ class ServersResource(PaginatedResource):
         body.update(extra)
         return self._post(f"/janus/20190725/servers/{server_id}/clone", body=body, idempotent=True)
 
+    def get_config(self, server_id: str) -> Dict[str, Any]:
+        """
+        VM'in ayrıntılı yapılandırmasını döndürür (20240725).
+
+        get()'ten farklı olarak advance_param içerir: cpu_type ("host",
+        "Haswell-noTSX", "Icelake-Server-v4", ...), bios, graphic_type, numa vb.
+
+        Endpoint: GET /janus/20240725/servers/{id}
+        """
+        return self._get(f"/janus/20240725/servers/{server_id}")
+
+    def locate(self, server_id: str) -> Dict[str, Any]:
+        """
+        VM'in liste kaydını döndürür: host_id, host_name, storage_id (datastore),
+        az_id. get() bu alanları (host_id, storage_id) boş döndürdüğü için
+        liste host'a göre süzülerek aranır.
+
+        Raises:
+            SCPNotFoundError: VM listede bulunamazsa
+        """
+        from sangfor_scp.exceptions import SCPNotFoundError
+
+        detail = self.get(server_id)
+        filters: Dict[str, Any] = {"az_id": detail.get("az_id")}
+        host_name = detail.get("host_name")
+        if host_name and not host_name.startswith("<"):
+            for host in self._client.system.list_all_hosts(az_id=detail.get("az_id")):
+                if host_name in (host.get("name"), host.get("ip")):
+                    filters["host_id"] = host.get("id")
+                    break
+        for vm in self.list_all(**filters):
+            if vm.get("id") == server_id:
+                return vm
+        raise SCPNotFoundError(f"VM listede bulunamadı: {server_id}")
+
+    def check_migration(self, server_id: str, host_id: str) -> Dict[str, Any]:
+        """
+        Taşıma öncesi kontrol. API'ye hiçbir değişiklik göndermez.
+
+        Kontroller:
+          - Hedef host var mı, çalışıyor mu, VMware değil mi
+          - VM zaten hedef host'ta mı
+          - VM'in CPU tipi "host" ise kaynak ve hedef host CPU modeli aynı mı
+            (SCP aksi hâlde "VM used host CPU but the CPU models ... are
+            different" hatasıyla reddeder)
+
+        Returns:
+            {
+                "ok": bool,
+                "problems": [str, ...],
+                "cpu_type": "host" | "Haswell-noTSX" | ...,
+                "source_host": {...} | None,
+                "target_host": {...} | None,
+                "vm": {...},          # locate() kaydı
+            }
+        """
+        vm = self.locate(server_id)
+        config = self.get_config(server_id)
+        cpu_type = (config.get("advance_param") or {}).get("cpu_type")
+
+        hosts = list(self._client.system.list_all_hosts())
+        target = next((h for h in hosts if h.get("id") == host_id), None)
+        source = next((h for h in hosts if h.get("id") == vm.get("host_id")), None)
+
+        problems: List[str] = []
+        if target is None:
+            problems.append(f"Hedef host bulunamadı: {host_id}")
+        else:
+            if target.get("status") not in (None, "running"):
+                problems.append(f"Hedef host çalışmıyor (status={target.get('status')})")
+            if target.get("type") not in (None, "h"):
+                problems.append("Hedef VMware host'u; VMware pool'larına taşıma desteklenmiyor")
+            if source is not None and source.get("id") == target.get("id"):
+                problems.append("VM zaten hedef host üzerinde")
+            if cpu_type == "host" and source is not None:
+                src_cpu = (source.get("cpu") or {}).get("type")
+                dst_cpu = (target.get("cpu") or {}).get("type")
+                if src_cpu and dst_cpu and src_cpu != dst_cpu:
+                    problems.append(
+                        f"VM CPU tipi 'host'; kaynak ({source.get('name')}: {src_cpu}) ve "
+                        f"hedef ({target.get('name')}: {dst_cpu}) CPU modelleri farklı. "
+                        "Önce CPU tipini değiştirin (ör. Icelake-Server-v4) veya aynı modelde host seçin"
+                    )
+        return {
+            "ok": not problems,
+            "problems": problems,
+            "cpu_type": cpu_type,
+            "source_host": source,
+            "target_host": target,
+            "vm": vm,
+        }
+
     def migrate(
         self,
         server_id: str,
         host_id: Optional[str] = None,
+        storage_location: Optional[str] = None,
+        az_id: Optional[str] = None,
+        auto_poweron: Optional[bool] = None,
+        check: bool = True,
         storage_tag_id: Optional[str] = None,
         **extra: Any,
     ) -> Optional[str]:
         """
-        VM'i farklı host veya storage'a taşır. Asenkron işlem, task_id döner.
+        VM'i başka bir host'a (ve/veya datastore'a) taşır. Asenkron, task_id döner.
 
         Args:
-            server_id:      VM ID
-            host_id:        Hedef fiziksel host ID (None → otomatik seçim)
-            storage_tag_id: Hedef storage tag (None → mevcut)
+            server_id:        VM ID
+            host_id:          Hedef fiziksel host ID (host-xxxx). Zorunlu;
+                              alternatif olarak compute_location={...} verilebilir
+            storage_location: Hedef datastore ID (None → VM'in mevcut datastore'u)
+            az_id:            Hedef resource pool (None → hedef host'un pool'u)
+            auto_poweron:     Taşıma sonrası otomatik aç
+            check:            True → önce check_migration() çalıştırılır, sorun
+                              varsa SCPPreflightError fırlatılır ve API'ye istek gitmez
+            storage_tag_id:   Kullanımdan kaldırıldı (API'de böyle bir alan yok)
+            **extra:          Gövdeye eklenecek diğer alanlar (dh_id, networks, ...)
 
         Returns:
             task_id (str) veya None
 
+        Raises:
+            SCPPreflightError: Ön kontrol başarısız (ör. CPU modeli uyumsuz)
+
         Endpoint: POST /janus/20180725/servers/{id}/migrate
+        Gövde: az_id, storage_location, compute_location{id} zorunlu.
         """
-        body: Dict[str, Any] = {}
-        if host_id is not None:
-            body["host_id"] = host_id
+        import warnings
+
+        from sangfor_scp.exceptions import SCPPreflightError
+
         if storage_tag_id is not None:
-            body["storage_tag_id"] = storage_tag_id
+            warnings.warn(
+                "migrate(storage_tag_id=...) API'de karşılığı olmadığı için yok sayılıyor; "
+                "storage_location (datastore ID) kullanın.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        compute_location = extra.pop("compute_location", None)
+        if compute_location is None:
+            if host_id is None:
+                raise ValueError("migrate() için host_id (veya compute_location) gerekli")
+            compute_location = {"id": host_id}
+
+        vm: Optional[Dict[str, Any]] = None
+        target: Optional[Dict[str, Any]] = None
+        if check and host_id is not None:
+            result = self.check_migration(server_id, host_id)
+            if not result["ok"]:
+                raise SCPPreflightError(
+                    "Taşıma ön kontrolü başarısız: " + "; ".join(result["problems"]),
+                    problems=result["problems"],
+                )
+            vm, target = result["vm"], result["target_host"]
+
+        if storage_location is None or az_id is None:
+            if vm is None:
+                vm = self.locate(server_id)
+            if storage_location is None:
+                storage_location = vm.get("storage_id")
+            if az_id is None:
+                az_id = (target or {}).get("az_id") or vm.get("az_id")
+
+        body: Dict[str, Any] = {
+            "az_id": az_id,
+            "storage_location": storage_location,
+            "compute_location": compute_location,
+        }
+        if auto_poweron is not None:
+            body["auto_poweron"] = int(bool(auto_poweron))
         body.update(extra)
         result = self._post(f"{self._BASE}/{server_id}/migrate", body=body, idempotent=True)
         if result and isinstance(result, dict):

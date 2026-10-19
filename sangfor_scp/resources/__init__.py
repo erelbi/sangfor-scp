@@ -7,6 +7,8 @@ from .volumes import VolumesResource
 from .eips import EIPsResource
 from .tasks import TasksResource
 from .system import SystemResource
+from .alarms import AlarmsResource
+from .metrics import MetricsResource
 
 __all__ = [
     "ServersResource",
@@ -18,4 +20,6 @@ __all__ = [
     "EIPsResource",
     "TasksResource",
     "SystemResource",
+    "AlarmsResource",
+    "MetricsResource",
 ]

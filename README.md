@@ -27,8 +27,10 @@ Supports EC2 (AWS4-HMAC-SHA256) and Token-based authentication with a **single l
 
 | Resource | Operations |
 |---|---|
-| **Virtual Machines** | list, get, create, update/rename, delete, power on/off/reboot/suspend, clone, migrate, console URL, password reset, batch ops, soft delete & restore |
-| **Tasks** | get, wait (with timeout & progress callback) |
+| **Virtual Machines** | list, get, get_config (CPU type, BIOS…), create, update/rename, delete, power on/off/reboot/suspend, clone, migrate (with CPU-compatibility preflight), console URL, password reset, batch ops, soft delete & restore |
+| **Tasks** | get, wait (with timeout & progress callback), list / list_since / list_failed |
+| **Alarms** | active alarms (filter by level/status/object), history, count_by, disk-partition parsing |
+| **Metrics** | host / VM / resource pool time series (CPU, RAM, IO, network), min/max/avg summary |
 | **Resource Pools (AZ)** | list, get, overview, storage tags |
 | **Tenants** | list, get, find by name |
 | **VPC Networks** | list, create, get, update, delete |
@@ -208,10 +210,20 @@ new_vm_id = result["uuid"]
 ### Migrate a VM
 
 ```python
-# Migrate to a specific host (None = auto-select)
-task_id = client.servers.migrate("vm-uuid", host_id="host-uuid")
+# Preflight only — sends nothing to the API
+check = client.servers.check_migration("vm-uuid", "host-xxxx")
+print(check["ok"], check["cpu_type"], check["problems"])
+
+# Migrate. az_id and storage_location default to the target host's pool
+# and the VM's current datastore. With check=True (default) the call raises
+# SCPPreflightError instead of submitting a migration that SCP would reject,
+# e.g. a VM with cpu_type="host" moving to a host with a different CPU model.
+task_id = client.servers.migrate("vm-uuid", host_id="host-xxxx", auto_poweron=True)
 client.tasks.wait(task_id)
 ```
+
+> `migrate()` before v0.4.0 sent `host_id`/`storage_tag_id`, which the API does not accept.
+> The body now follows the Open-API spec: `az_id`, `storage_location`, `compute_location`.
 
 ### Get Console URL (VNC/SPICE/RDP)
 
@@ -339,6 +351,64 @@ print(f"Running VMs: {overview['server']['running_count']}")
 # SCP version
 info = client.system.version()
 print(info["build_version"])
+```
+
+### Alarms
+
+```python
+# Active critical alarms
+for alarm in client.alarms.list_all(level="p1"):          # p1 critical, p2 medium, p3 low
+    print(alarm["object_name"], alarm["description"])
+
+client.alarms.count_by("policy_name")                      # [("High VM Logical Disk rate", 29), ...]
+
+# Disk-usage alarms → partitions
+for alarm in client.alarms.list_all():
+    for partition, pct in client.alarms.parse_partitions(alarm):
+        print(alarm["object_name"], partition, pct)
+```
+
+### Metrics
+
+```python
+# Last 24 h of host CPU/RAM (granularity picked automatically)
+data = client.metrics.host("host-xxxx", timegap="24h")
+print(data["cpu.util"]["datapoints"][-1])                  # ("2026-10-19T21:40:00", 14.2)
+
+client.metrics.host_summary("host-xxxx", timegap="7d")     # {"cpu.util": {"min", "max", "avg", "last", "count"}, ...}
+client.metrics.server_summary("vm-uuid", timegap="1h")     # VM: object_type "server"
+client.metrics.az("az-uuid", metric_names=["disk.util"])   # resource pool storage usage
+```
+
+### Task History
+
+```python
+for task in client.tasks.list_failed(days=30):
+    print(task["begin_time"], task["action"], task["description"])
+
+client.tasks.list(object_id="vm-uuid")                     # history of one VM
+```
+
+### Health Report (CLI)
+
+Read-only report of alarms, VM disk usage, failed tasks grouped by cause,
+host CPU generations, memory pressure, capacity and lost VMs.
+
+```bash
+pip install sangfor-scp
+export SCP_HOST=https://10.x.x.x SCP_ACCESS_KEY=... SCP_SECRET_KEY=...   # or a .env file
+
+scp-health                                   # text summary
+scp-health --days 7 --csv report/            # also write CSV files (Excel-ready)
+scp-health --cpu-scan --workers 4 --csv report/   # + CPU type of every HCI VM (1 request per VM)
+```
+
+From Python:
+
+```python
+from sangfor_scp.health import collect, render_text, write_csv
+report = collect(client, days=30, cpu_scan=False)
+print(render_text(report))
 ```
 
 ### Async Task with Progress Callback

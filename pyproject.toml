@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sangfor-scp"
-version = "0.3.0"
+version = "0.4.0"
 description = "Sangfor Cloud Platform (SCP) Open-API Python Client Library"
 readme = "README.md"
 license = "MIT"
@@ -39,6 +39,9 @@ dev = [
     "build>=1.0",
     "twine>=4.0",
 ]
+
+[project.scripts]
+scp-health = "sangfor_scp.cli:health_main"
 
 [project.urls]
 Homepage = "https://github.com/erelbi/sangfor-scp"
