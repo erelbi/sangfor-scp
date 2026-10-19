@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in the library does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Do not paste credentials, hostnames, IP addresses,
+        UUIDs or VM names from a real environment** — replace them with placeholders.
+        Security issues: use the private form described in SECURITY.md instead.
+  - type: input
+    id: lib-version
+    attributes:
+      label: Library version
+      description: "`python -c \"import sangfor_scp; print(sangfor_scp.__version__)\"`"
+      placeholder: "0.4.0"
+    validations:
+      required: true
+  - type: input
+    id: scp-version
+    attributes:
+      label: SCP version
+      description: "`client.system.version()[\"build_version\"]`"
+      placeholder: "SCP 6.11.2"
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version and OS
+      placeholder: "Python 3.12, Ubuntu 24.04"
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you call, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal code to reproduce
+      render: python
+      placeholder: |
+        from sangfor_scp import SCPClient
+        client = SCPClient(host="https://10.x.x.x", access_key="...", secret_key="...")
+        client.servers.migrate("vm-uuid", host_id="host-xxxx")
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      description: Full traceback, HTTP status and SCP errcode (e.g. 0x120220010001)
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues
+          required: true
+        - label: I removed credentials and real environment data from this report
+          required: true

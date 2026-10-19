@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a new endpoint, helper or CLI feature
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The task you are trying to automate and what is missing today.
+    validations:
+      required: true
+  - type: textarea
+    id: endpoint
+    attributes:
+      label: Related SCP Open-API endpoint(s)
+      description: Path, API version and section of the Open-API reference, if known.
+      placeholder: "GET /janus/20180725/snapshots — section 4.12 Snapshot Management"
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed usage
+      description: How you would like to call it.
+      render: python
+      placeholder: |
+        for snap in client.snapshots.list_all(server_id="vm-uuid"):
+            ...
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you like to implement it?
+      options:
+        - "Yes, I can open a pull request"
+        - "Maybe, with guidance"
+        - "No"

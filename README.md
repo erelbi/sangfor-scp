@@ -490,6 +490,15 @@ except SCPTimeoutError as e:
 
 ---
 
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development setup and guidelines. Please follow the
+[Code of Conduct](CODE_OF_CONDUCT.md) and report security issues privately as
+described in [SECURITY.md](SECURITY.md).
+
+---
+
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
