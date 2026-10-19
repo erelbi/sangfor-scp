@@ -2,32 +2,67 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, test]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   test:
+    name: Unit tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.12", "3.13"]
+        python-version: ["3.9", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+
       - name: Install
-        run: python -m pip install -e ".[dev,token-auth]"
+        run: python -m pip install -e ".[dev,token-auth]" pytest-cov
+
       - name: Unit tests
-        run: python -m pytest -q tests
+        run: >
+          python -m pytest tests -v
+          --junitxml=reports/junit-${{ matrix.python-version }}.xml
+          --cov=sangfor_scp --cov-report=term-missing
+          --cov-report=xml:reports/coverage-${{ matrix.python-version }}.xml
+
+      - name: Summary
+        if: always()
+        run: |
+          python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          ver = "${{ matrix.python-version }}"
+          for path in glob.glob(f"reports/junit-{ver}.xml"):
+              root = ET.parse(path).getroot()
+              s = root if root.tag == "testsuite" else root.find("testsuite")
+              total, fail, err, skip = (int(s.get(k, 0)) for k in ("tests", "failures", "errors", "skipped"))
+              ok = total - fail - err - skip
+              print(f"### Python {ver}: {ok}/{total} passed" + (f", {fail} failed, {err} errors" if fail or err else ""))
+          for path in glob.glob(f"reports/coverage-{ver}.xml"):
+              rate = float(ET.parse(path).getroot().get("line-rate", 0)) * 100
+              print(f"Line coverage: **{rate:.1f}%**")
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ matrix.python-version }}
+          path: reports/
 
   packages:
+    name: RPM / DEB build and smoke test
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/test'
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
