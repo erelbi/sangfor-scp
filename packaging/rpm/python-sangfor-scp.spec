@@ -5,10 +5,11 @@ Summary:        Python client for the Sangfor Cloud Platform (SCP) Open-API
 
 License:        MIT
 URL:            https://github.com/erelbi/sangfor-scp
-Source0:        sangfor_scp-%{version}.tar.gz
+Source:         %{pypi_source sangfor_scp}
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
+# Testler sadece unittest.mock kullanıyor; pytest-mock gerekmez
 BuildRequires:  python3-pytest
 
 %global _description %{expand:
@@ -33,6 +34,11 @@ Recommends:     python3-pycryptodomex
 
 %prep
 %autosetup -n sangfor_scp-%{version}
+%if 0%{?rhel} && 0%{?rhel} <= 10
+# EL10'daki setuptools 69, PEP 639 lisans biçimini (license = "MIT", license-files)
+# tanımıyor; eski tablo biçimine çevir. LICENSE dosyası yine otomatik eklenir.
+sed -i -e 's/^license = "MIT"$/license = {text = "MIT"}/' -e '/^license-files = /d' pyproject.toml
+%endif
 
 
 %generate_buildrequires
