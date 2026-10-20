@@ -65,9 +65,9 @@ sed -i -e 's/^license = "MIT"$/license = {text = "MIT"}/' -e '/^license-files = 
 
 
 %changelog
-* Wed Oct 21 2026 sangfor-scp maintainers <erelbi@users.noreply.github.com> - 0.4.2-1
+* Wed Oct 21 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.2-1
 - metrics: stop_time is platform local time; windows older than or crossing the 24h mark now work
 
-* Mon Oct 19 2026 sangfor-scp maintainers <erelbi@users.noreply.github.com> - 0.4.1-1
+* Mon Oct 19 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.1-1
 - Initial RPM package
 - Token authentication also works with pycryptodomex (Cryptodome)

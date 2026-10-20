@@ -20,6 +20,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SPEC="$ROOT/packaging/rpm/python-sangfor-scp.spec"
 DEBCL="$ROOT/packaging/debian/changelog"
 MAINTAINER="sangfor-scp maintainers <erelbi@users.noreply.github.com>"
+RPM_PACKAGER="Ergün Elvan Bilsel <bilselergun@gmail.com>"   # Fedora paketçisi
 
 OLD="$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/pyproject.toml" | head -1)"
 if [ "$OLD" = "$NEW" ]; then
@@ -33,7 +34,7 @@ sed -i "s/^__version__ = \"$OLD\"/__version__ = \"$NEW\"/" "$ROOT/sangfor_scp/__
 # RPM: Version, Release=1, changelog girişi en üste
 RPM_DATE="$(LC_ALL=C date '+%a %b %d %Y')"
 sed -i "s/^Version: .*/Version:        $NEW/; s/^Release: .*/Release:        1%{?dist}/" "$SPEC"
-sed -i "/^%changelog/a * $RPM_DATE $MAINTAINER - $NEW-1\n- $MESSAGE\n" "$SPEC"
+sed -i "/^%changelog/a * $RPM_DATE $RPM_PACKAGER - $NEW-1\n- $MESSAGE\n" "$SPEC"
 
 # Debian: yeni changelog girişi en üste
 DEB_DATE="$(LC_ALL=C date -R)"
