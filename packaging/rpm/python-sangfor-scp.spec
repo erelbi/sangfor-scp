@@ -1,5 +1,5 @@
 Name:           python-sangfor-scp
-Version:        0.4.1
+Version:        0.4.2
 Release:        1%{?dist}
 Summary:        Python client for the Sangfor Cloud Platform (SCP) Open-API
 
@@ -59,6 +59,9 @@ Recommends:     python3-pycryptodomex
 
 
 %changelog
+* Wed Oct 21 2026 sangfor-scp maintainers <erelbi@users.noreply.github.com> - 0.4.2-1
+- metrics: stop_time is platform local time; windows older than or crossing the 24h mark now work
+
 * Mon Oct 19 2026 sangfor-scp maintainers <erelbi@users.noreply.github.com> - 0.4.1-1
 - Initial RPM package
 - Token authentication also works with pycryptodomex (Cryptodome)

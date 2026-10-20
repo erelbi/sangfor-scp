@@ -51,7 +51,7 @@ from sangfor_scp.exceptions import (
 )
 from sangfor_scp.provision import Plan, SpecError
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __author__ = "Sangfor SCP API Library"
 
 __all__ = [

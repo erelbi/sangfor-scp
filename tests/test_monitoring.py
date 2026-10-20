@@ -93,6 +93,65 @@ def test_server_uses_server_object_type():
     assert client.request.call_args[1]["params"]["object_type"] == "server"
 
 
+def _metrics_with_offset(hours: int = 3):
+    from datetime import timedelta
+    client = MagicMock()
+    client.request.return_value = {}
+    res = MetricsResource(client)
+    res.utc_offset = timedelta(hours=hours)
+    return client, res
+
+
+def _local_now(hours: int = 3):
+    from datetime import datetime, timedelta, timezone
+    return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=hours)
+
+
+def test_stop_time_is_shifted_by_utc_offset():
+    from datetime import timedelta
+    client, res = _metrics_with_offset()
+    stop = (_local_now() - timedelta(hours=2)).replace(microsecond=0)
+    res.query("vm-1", "server", "cpu.util", timegap="6h", granularity=300, stop_time=stop)
+    params = client.request.call_args[1]["params"]
+    assert params["stop_time"] == (stop + timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
+    assert params["timegap"] == "6h"
+
+
+def test_old_short_window_is_widened_and_trimmed():
+    from datetime import timedelta
+    client, res = _metrics_with_offset()
+    stop = (_local_now() - timedelta(days=2)).replace(minute=0, second=0, microsecond=0)
+    fmt = lambda d: d.strftime("%Y-%m-%dT%H:%M:%S")
+    client.request.return_value = {"cpu.util": {"datapoints": [
+        [fmt(stop - timedelta(hours=10)), "1"], [fmt(stop - timedelta(hours=1)), "2"], [fmt(stop), "3"]]}}
+    data = res.query("vm-1", "server", "cpu.util", timegap="4h", granularity=300, stop_time=stop)
+    params = client.request.call_args[1]["params"]
+    assert params["timegap"] == "25h"
+    assert params["granularity"] == "300"
+    assert [v for _, v in data["cpu.util"]["datapoints"]] == [2.0, 3.0]
+
+
+def test_window_crossing_24h_limit_queries_without_stop_time():
+    from datetime import timedelta
+    client, res = _metrics_with_offset()
+    stop = _local_now() - timedelta(hours=2)
+    res.query("vm-1", "server", "cpu.util", timegap="48h", stop_time=stop)
+    params = client.request.call_args[1]["params"]
+    assert params["stop_time"] is None
+    assert params["granularity"] == "1800"
+    assert to_seconds(params["timegap"]) >= 50 * 3600
+
+
+def test_utc_offset_autodetect_from_probe():
+    from datetime import timedelta
+    client = MagicMock()
+    last = _local_now(3).strftime("%Y-%m-%dT%H:%M:%S")
+    client.request.return_value = {"cpu.util": {"datapoints": [[last, "1"]]}}
+    res = MetricsResource(client)
+    res.query("vm-1", "server", "cpu.util", timegap="1h", stop_time="2020-01-01 00:00:00")
+    assert res.utc_offset == timedelta(hours=3)
+
+
 # ------------------------------------------------------------------ #
 # Tasks                                                               #
 # ------------------------------------------------------------------ #

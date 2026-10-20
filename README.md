@@ -397,7 +397,16 @@ print(data["cpu.util"]["datapoints"][-1])                  # ("2026-10-19T21:40:
 client.metrics.host_summary("host-xxxx", timegap="7d")     # {"cpu.util": {"min", "max", "avg", "last", "count"}, ...}
 client.metrics.server_summary("vm-uuid", timegap="1h")     # VM: object_type "server"
 client.metrics.az("az-uuid", metric_names=["disk.util"])   # resource pool storage usage
+
+# A past window: stop_time is the platform's local time (same clock as the returned timestamps)
+client.metrics.server("vm-uuid", ["cpu.util", "net.in.bps"],
+                      timegap="6h", granularity=300, stop_time="2026-10-20 18:00:00")
 ```
+
+The API shifts `stop_time` by the platform's UTC offset and rejects some windows
+(a window older than 24 h needs `timegap` > 24h; a window crossing the 24 h mark is
+refused). `metrics.query()` corrects the shift (offset auto-detected once, or set
+`client.metrics.utc_offset`) and widens/trims the request so any window works.
 
 ### Task History
 
