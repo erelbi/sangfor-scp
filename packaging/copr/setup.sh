@@ -21,10 +21,13 @@ PACKAGE="python-sangfor-scp"
 REPO_URL="${REPO_URL:-https://github.com/erelbi/sangfor-scp}"
 SPEC="packaging/rpm/python-sangfor-scp.spec"
 
+command -v curl >/dev/null || { echo "curl gerekli" >&2; exit 1; }
 command -v copr-cli >/dev/null || { echo "copr-cli yok: sudo dnf install copr-cli" >&2; exit 1; }
 [ -f "${COPR_CONFIG:-$HOME/.config/copr}" ] || { echo "~/.config/copr yok: https://copr.fedorainfracloud.org/api/" >&2; exit 1; }
 
 OWNER="$(copr-cli whoami)"
+COPR_URL="$(sed -n 's/^copr_url *= *//p' "${COPR_CONFIG:-$HOME/.config/copr}" | head -1)"
+COPR_URL="${COPR_URL:-https://copr.fedorainfracloud.org}"
 
 # Varsayılan: Copr'da açık olan tüm Fedora sürümleri + rawhide + EPEL 10 (Rocky/Alma/RHEL 10).
 # EPEL 9 yok: EL9'daki setuptools (53) pyproject.toml [project] tablosunu okuyamıyor.
@@ -41,7 +44,8 @@ if copr-cli get-package "$OWNER/$PROJECT" --name "$PACKAGE" >/dev/null 2>&1; the
     echo "Paket zaten var, ayarları güncelleniyor"
     ACTION=edit-package-scm
 else
-    if ! copr-cli list-packages "$OWNER/$PROJECT" >/dev/null 2>&1; then
+    # Not: "copr-cli list-packages" proje yokken hata vermek yerine takılıyor → API'ye sor
+    if ! curl -sf -m 30 "$COPR_URL/api_3/project?ownername=$OWNER&projectname=$PROJECT" >/dev/null; then
         copr-cli create "$PROJECT" "${CHROOT_ARGS[@]}" \
             --description "Python client and scp-health CLI for the Sangfor Cloud Platform (SCP) Open-API" \
             --instructions "sudo dnf copr enable $OWNER/$PROJECT && sudo dnf install python3-sangfor-scp"
@@ -58,7 +62,8 @@ copr-cli "$ACTION" "$OWNER/$PROJECT" \
     --method make_srpm \
     --webhook-rebuild on
 
-copr-cli build-package "$OWNER/$PROJECT" --name "$PACKAGE"
+copr-cli build-package --nowait "$OWNER/$PROJECT" --name "$PACKAGE"
+echo "Derleme durumu: $COPR_URL/coprs/$OWNER/$PROJECT/builds/"
 
 cat <<MSG
 
