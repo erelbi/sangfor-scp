@@ -1,5 +1,5 @@
 Name:           python-sangfor-scp
-Version:        0.4.3
+Version:        0.4.4
 Release:        1%{?dist}
 Summary:        Python client for the Sangfor Cloud Platform (SCP) Open-API
 
@@ -57,6 +57,7 @@ sed -i -e 's/^license = "MIT"$/license = {text = "MIT"}/' -e '/^license-files = 
 %install
 %pyproject_install
 %pyproject_save_files -l sangfor_scp
+install -Dpm 0644 man/scp-health.1 %{buildroot}%{_mandir}/man1/scp-health.1
 
 
 %check
@@ -67,9 +68,13 @@ sed -i -e 's/^license = "MIT"$/license = {text = "MIT"}/' -e '/^license-files = 
 %files -n python3-sangfor-scp -f %{pyproject_files}
 %doc README.md CONTRIBUTING.md SECURITY.md
 %{_bindir}/scp-health
+%{_mandir}/man1/scp-health.1*
 
 
 %changelog
+* Wed Oct 21 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.4-1
+- Add scp-health(1) man page
+
 * Wed Oct 21 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.3-1
 - Add offline tests for EC2 signing, HTTP error mapping, pagination,
   task polling and token login

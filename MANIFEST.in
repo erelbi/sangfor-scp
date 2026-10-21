@@ -5,3 +5,4 @@ include SECURITY.md
 include CODE_OF_CONDUCT.md
 include onurcilbir.png
 recursive-include tests *.py
+include man/scp-health.1

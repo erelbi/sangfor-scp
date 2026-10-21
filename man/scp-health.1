@@ -1,0 +1,86 @@
+.TH SCP-HEALTH 1 "October 2026" "sangfor-scp" "User Commands"
+.SH NAME
+scp-health \- read-only health report for a Sangfor Cloud Platform (SCP)
+.SH SYNOPSIS
+.B scp-health
+[\fB\-\-days\fR \fIN\fR]
+[\fB\-\-cpu\-scan\fR]
+[\fB\-\-workers\fR \fIN\fR]
+[\fB\-\-max\-rps\fR \fIRATE\fR]
+[\fB\-\-top\fR \fIN\fR]
+[\fB\-\-csv\fR \fIDIR\fR]
+[\fB\-\-json\fR \fIFILE\fR]
+[\fB\-\-env\fR \fIFILE\fR]
+[\fB\-q\fR]
+.SH DESCRIPTION
+.B scp-health
+connects to the SCP Open-API and prints a text summary of the platform state:
+open alarms, VM disk usage, failed tasks grouped by cause, host CPU
+generations, memory pressure, capacity and lost VMs.
+.PP
+It only performs read (GET) requests and never changes anything on the
+platform. Progress messages are written to standard error, the report to
+standard output.
+.SH OPTIONS
+.TP
+.BI \-\-days " N"
+Number of days of task history to examine (default: 30).
+.TP
+.B \-\-cpu\-scan
+Also fetch the CPU type of every HCI virtual machine. This needs one request
+per VM and can be slow on large platforms.
+.TP
+.BI \-\-workers " N"
+Number of parallel requests used by \fB\-\-cpu\-scan\fR (default: 4).
+.TP
+.BI \-\-max\-rps " RATE"
+Maximum number of requests per second (default: 8; the API limit is 10).
+.TP
+.BI \-\-top " N"
+Number of rows shown per report section (default: 15).
+.TP
+.BI \-\-csv " DIR"
+Also write the report as CSV files into directory \fIDIR\fR.
+.TP
+.BI \-\-json " FILE"
+Also write the raw report as JSON to \fIFILE\fR.
+.TP
+.BI \-\-env " FILE"
+Read credentials from \fIFILE\fR (default: \fI.env\fR in the current
+directory). Variables already set in the environment take precedence.
+.TP
+.BR \-q ", " \-\-quiet
+Do not print progress messages.
+.TP
+.BR \-h ", " \-\-help
+Show a short help message and exit.
+.SH ENVIRONMENT
+Credentials are read from the environment or from the \fB\-\-env\fR file,
+one \fIKEY\fR=\fIVALUE\fR per line.
+.TP
+.B SCP_HOST
+Base URL of the SCP platform, for example \fIhttps://192.0.2.10\fR. Required.
+.TP
+.BR SCP_ACCESS_KEY ", " SCP_SECRET_KEY
+Access key and secret key for EC2 (AWS4-HMAC-SHA256) authentication.
+.TP
+.BR SCP_USERNAME ", " SCP_PASSWORD
+User name and password for token authentication, used when no access key is
+set. Requires the pycryptodomex (or pycryptodome) Python module.
+.TP
+.B SCP_REGION
+Region used for EC2 signing (default: \fIcn-south-1\fR).
+.SH EXIT STATUS
+0 on success; non-zero if credentials are missing or an API request fails.
+.SH EXAMPLES
+.nf
+scp-health
+scp-health \-\-days 7 \-\-csv report/
+scp-health \-\-cpu\-scan \-\-workers 4 \-\-csv report/
+.fi
+.SH SECURITY
+TLS certificates are not verified, because SCP platforms ship with a
+self-signed certificate by default. Keep the \fB\-\-env\fR file readable only by
+its owner.
+.SH SEE ALSO
+https://github.com/erelbi/sangfor-scp
