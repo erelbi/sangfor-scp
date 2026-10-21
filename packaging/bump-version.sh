@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Sürümü beş yerde birden günceller: pyproject.toml, sangfor_scp/__init__.py,
-# RPM spec (Version + %changelog), debian/changelog ve Arch PKGBUILD/.SRCINFO.
+# Sürümü altı yerde birden günceller: pyproject.toml, sangfor_scp/__init__.py,
+# RPM spec, debian/changelog, Arch PKGBUILD/.SRCINFO ve openSUSE spec/.changes.
 #
 #   packaging/bump-version.sh 0.5.0 "Snapshot yönetimi eklendi"
 #
@@ -55,6 +55,17 @@ sed -i -e "s/^\tpkgver = .*/\tpkgver = $NEW/" -e "s/^\tpkgrel = .*/\tpkgrel = 1/
 if ! "$ARCH/update-checksum.sh" 2>/dev/null; then
     echo "Not: PyPI yüklemesinden sonra packaging/arch/update-checksum.sh çalıştır (AUR sha256)"
 fi
+
+# openSUSE (OBS): Version ve .changes girişi en üste
+OBS="$ROOT/packaging/obs"
+sed -i "s/^Version: .*/Version:        $NEW/" "$OBS/python-sangfor-scp.spec"
+{
+    printf -- '-------------------------------------------------------------------\n'
+    printf '%s - %s\n\n' "$(LC_ALL=C date -u '+%a %b %e %H:%M:%S UTC %Y')" "$RPM_PACKAGER"
+    printf -- '- Update to version %s:\n  * %s\n\n' "$NEW" "$MESSAGE"
+    cat "$OBS/python-sangfor-scp.changes"
+} > "$OBS/python-sangfor-scp.changes.new"
+mv "$OBS/python-sangfor-scp.changes.new" "$OBS/python-sangfor-scp.changes"
 
 echo "$OLD → $NEW"
 grep -n "^version" "$ROOT/pyproject.toml"
