@@ -1,0 +1,6 @@
+-------------------------------------------------------------------
+Wed Oct 21 20:30:00 UTC 2026 - Ergün Elvan Bilsel <bilselergun@gmail.com>
+
+- Initial package, version 0.4.4:
+  * Python client for the Sangfor Cloud Platform (SCP) Open-API
+  * scp-health(1) read-only platform health report

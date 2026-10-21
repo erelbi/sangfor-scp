@@ -55,6 +55,17 @@ With Token-based authentication support (RSA encryption):
 pip install sangfor-scp[token-auth]
 ```
 
+### Distribution repositories
+
+```bash
+# Fedora 43+, EPEL 10 (Copr)
+sudo dnf copr enable erelbi/sangfor-scp && sudo dnf install python3-sangfor-scp
+
+# openSUSE Tumbleweed (OBS); for Leap use openSUSE_Leap_16.0 or openSUSE_Leap_15.6
+sudo zypper addrepo https://download.opensuse.org/repositories/home:erelbi/openSUSE_Tumbleweed/home:erelbi.repo
+sudo zypper refresh && sudo zypper install python3-sangfor-scp   # Leap 15.6: python311-sangfor-scp
+```
+
 ### RPM / DEB packages
 
 Native packages install the library system-wide together with the
