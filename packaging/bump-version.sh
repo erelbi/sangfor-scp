@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Sürümü dört yerde birden günceller: pyproject.toml, sangfor_scp/__init__.py,
-# RPM spec (Version + %changelog) ve debian/changelog.
+# Sürümü beş yerde birden günceller: pyproject.toml, sangfor_scp/__init__.py,
+# RPM spec (Version + %changelog), debian/changelog ve Arch PKGBUILD/.SRCINFO.
 #
 #   packaging/bump-version.sh 0.5.0 "Snapshot yönetimi eklendi"
 #
@@ -45,6 +45,16 @@ DEB_DATE="$(LC_ALL=C date -R)"
     cat "$DEBCL"
 } > "$DEBCL.new"
 mv "$DEBCL.new" "$DEBCL"
+
+# Arch (AUR): pkgver, pkgrel=1 ve .SRCINFO. sha256 PyPI yüklemesinden sonra
+# packaging/arch/update-checksum.sh ile yazılır.
+ARCH="$ROOT/packaging/arch"
+sed -i "s/^pkgver=.*/pkgver=$NEW/; s/^pkgrel=.*/pkgrel=1/" "$ARCH/PKGBUILD"
+sed -i -e "s/^\tpkgver = .*/\tpkgver = $NEW/" -e "s/^\tpkgrel = .*/\tpkgrel = 1/" \
+       -e "s/sangfor_scp-$OLD\.tar\.gz/sangfor_scp-$NEW.tar.gz/" "$ARCH/.SRCINFO"
+if ! "$ARCH/update-checksum.sh" 2>/dev/null; then
+    echo "Not: PyPI yüklemesinden sonra packaging/arch/update-checksum.sh çalıştır (AUR sha256)"
+fi
 
 echo "$OLD → $NEW"
 grep -n "^version" "$ROOT/pyproject.toml"
