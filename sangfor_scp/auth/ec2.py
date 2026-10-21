@@ -51,7 +51,7 @@ class EC2Signer(AuthBase):
     # ------------------------------------------------------------------ #
 
     def _build_headers(self, r) -> dict:
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         amzdate = now.strftime("%Y%m%dT%H%M%SZ")
         datestamp = now.strftime("%Y%m%d")
 

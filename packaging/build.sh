@@ -48,7 +48,7 @@ build_rpm() {
     echo "== RPM ($FEDORA_IMAGE)"
     run "$FEDORA_IMAGE" bash -euo pipefail -c "
         dnf -y -q install rpm-build pyproject-rpm-macros python3-devel python3-pytest \
-            python3-pip python3-setuptools python3-wheel python3-requests python3-urllib3 >/dev/null
+            python3-pip python3-setuptools python3-wheel python3-requests python3-urllib3 python3-pycryptodomex >/dev/null
         mkdir -p ~/rpmbuild/SOURCES ~/rpmbuild/SPECS
         cp /work/$SDIST ~/rpmbuild/SOURCES/
         cp /work/rpm/python-sangfor-scp.spec ~/rpmbuild/SPECS/

@@ -140,7 +140,7 @@ class TokenAuth:
         try:
             token_data = data["data"]["access"]["token"]
             self._token_id = token_data["id"]
-            self._expires_at = datetime.datetime.utcnow() + datetime.timedelta(
+            self._expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
                 hours=self.TOKEN_TTL_HOURS
             )
         except (KeyError, TypeError) as exc:
@@ -154,7 +154,7 @@ class TokenAuth:
         """Token süresi dolmuş mu?"""
         if self._token_id is None or self._expires_at is None:
             return True
-        return datetime.datetime.utcnow() >= self._expires_at
+        return datetime.datetime.now(datetime.timezone.utc) >= self._expires_at
 
     def refresh_if_needed(self) -> None:
         """Süre dolmuşsa yeniden login yap."""

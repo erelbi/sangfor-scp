@@ -1,5 +1,5 @@
 Name:           python-sangfor-scp
-Version:        0.4.2
+Version:        0.4.3
 Release:        1%{?dist}
 Summary:        Python client for the Sangfor Cloud Platform (SCP) Open-API
 
@@ -9,8 +9,12 @@ Source:         %{pypi_source sangfor_scp}
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
-# Testler sadece unittest.mock kullanıyor; pytest-mock gerekmez
+# The tests only use unittest.mock, so pytest-mock is not needed
 BuildRequires:  python3-pytest
+%if 0%{?fedora}
+# Lets %%check also run the RSA password encryption test (skipped without it)
+BuildRequires:  python3-pycryptodomex
+%endif
 
 %global _description %{expand:
 sangfor-scp is a Python client library for the Sangfor Cloud Platform (SCP)
@@ -35,8 +39,9 @@ Recommends:     python3-pycryptodomex
 %prep
 %autosetup -n sangfor_scp-%{version}
 %if 0%{?rhel} && 0%{?rhel} <= 10
-# EL10'daki setuptools 69, PEP 639 lisans biçimini (license = "MIT", license-files)
-# tanımıyor; eski tablo biçimine çevir. LICENSE dosyası yine otomatik eklenir.
+# setuptools 69 on EL10 does not understand the PEP 639 license fields
+# (license = "MIT", license-files); convert them to the older table form.
+# The LICENSE file is still picked up automatically.
 sed -i -e 's/^license = "MIT"$/license = {text = "MIT"}/' -e '/^license-files = /d' pyproject.toml
 %endif
 
@@ -65,6 +70,12 @@ sed -i -e 's/^license = "MIT"$/license = {text = "MIT"}/' -e '/^license-files = 
 
 
 %changelog
+* Wed Oct 21 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.3-1
+- Add offline tests for EC2 signing, HTTP error mapping, pagination,
+  task polling and token login
+- Replace deprecated datetime.utcnow()
+- Spec: English comments; BuildRequires pycryptodomex for %%check on Fedora
+
 * Wed Oct 21 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.2-1
 - metrics: stop_time is platform local time; windows older than or crossing the 24h mark now work
 
