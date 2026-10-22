@@ -55,8 +55,18 @@ def client_from_env():
     sys.exit("SCP_ACCESS_KEY/SCP_SECRET_KEY veya SCP_USERNAME/SCP_PASSWORD gerekli")
 
 
+def _safe_console() -> None:
+    """Türkçe çıktı UTF-8 olmayan konsolda (ör. Windows cp1252'ye yönlendirme) çökmesin."""
+    for stream in (sys.stdout, sys.stderr):
+        encoding = (getattr(stream, "encoding", None) or "").lower().replace("-", "")
+        if encoding != "utf8" and hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+
+
 def health_main(argv: Optional[List[str]] = None) -> int:
     from sangfor_scp.health import collect, render_text, write_csv, write_json
+
+    _safe_console()
 
     parser = argparse.ArgumentParser(
         prog="scp-health",

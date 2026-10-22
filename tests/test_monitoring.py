@@ -268,3 +268,18 @@ def test_render_and_csv(tmp_path):
     files = write_csv(report, str(tmp_path))
     names = {os.path.basename(p) for p in files}
     assert {"alarmlar.csv", "disk_doluluk.csv", "basarisiz_tasklar.csv", "hostlar.csv", "vm_cpu_tipleri.csv"} <= names
+
+
+def test_health_help_on_non_utf8_console(monkeypatch):
+    import io
+    import sys
+
+    from sangfor_scp.cli import health_main
+
+    out = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", out)
+    with pytest.raises(SystemExit) as exc:
+        health_main(["--help"])
+    assert exc.value.code == 0
+    out.flush()
+    assert b"scp-health" in out.buffer.getvalue()
