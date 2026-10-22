@@ -16,7 +16,7 @@
 
 %{?sle15_python_module_pythons}
 Name:           python-sangfor-scp
-Version:        0.4.4
+Version:        0.4.5
 Release:        0
 Summary:        Python client for the Sangfor Cloud Platform (SCP) Open-API
 License:        MIT

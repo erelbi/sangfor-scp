@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct 22 17:58:58 UTC 2026 - Ergün Elvan Bilsel <bilselergun@gmail.com>
+
+- Update to version 0.4.5:
+  * scp-health no longer crashes on a non-UTF-8 console (Windows); Windows-safe tests; Docker image on ghcr.io; Debian/Ubuntu builds on OBS
+
+-------------------------------------------------------------------
 Wed Oct 21 20:30:00 UTC 2026 - Ergün Elvan Bilsel <bilselergun@gmail.com>
 
 - Initial package, version 0.4.4:

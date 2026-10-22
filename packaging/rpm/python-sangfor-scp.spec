@@ -1,5 +1,5 @@
 Name:           python-sangfor-scp
-Version:        0.4.4
+Version:        0.4.5
 Release:        1%{?dist}
 Summary:        Python client for the Sangfor Cloud Platform (SCP) Open-API
 
@@ -72,6 +72,9 @@ install -Dpm 0644 man/scp-health.1 %{buildroot}%{_mandir}/man1/scp-health.1
 
 
 %changelog
+* Thu Oct 22 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.5-1
+- scp-health no longer crashes on a non-UTF-8 console (Windows); Windows-safe tests; Docker image on ghcr.io; Debian/Ubuntu builds on OBS
+
 * Wed Oct 21 2026 Ergün Elvan Bilsel <bilselergun@gmail.com> - 0.4.4-1
 - Add scp-health(1) man page
 

@@ -1,3 +1,9 @@
+python-sangfor-scp (0.4.5-1) unstable; urgency=medium
+
+  * scp-health no longer crashes on a non-UTF-8 console (Windows); Windows-safe tests; Docker image on ghcr.io; Debian/Ubuntu builds on OBS
+
+ -- sangfor-scp maintainers <erelbi@users.noreply.github.com>  Thu, 22 Oct 2026 20:58:57 +0300
+
 python-sangfor-scp (0.4.4-1) unstable; urgency=medium
 
   * Add scp-health(1) man page
