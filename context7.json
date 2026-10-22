@@ -1,0 +1,15 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "sangfor-scp",
+  "description": "Python client library for the Sangfor Cloud Platform (SCP) Open-API: virtual machines, networks, images, volumes, elastic IPs, tasks, alarms and metrics, with EC2 (AWS4-HMAC-SHA256) and token authentication. Ships the scp-health CLI, a read-only platform health report.",
+  "excludeFolders": [".github", ".copr", "packaging", "man", "tests", "examples/specs"],
+  "excludeFiles": ["CODE_OF_CONDUCT.md", "SECURITY.md", "CONTRIBUTING.md", "PULL_REQUEST_TEMPLATE.md"],
+  "rules": [
+    "Create one SCPClient and use its resource attributes (client.servers, client.networks, client.tasks, ...); do not call the HTTP API directly.",
+    "Write operations are asynchronous: pass the returned task_id to client.tasks.wait(task_id, timeout=...) before using the result.",
+    "Use list_all(**filters) to iterate every page; list_page() returns a single raw page.",
+    "az_id means an SCP resource pool; IDs are UUID strings and results are plain dicts.",
+    "Token authentication (username/password) needs the token-auth extra: pip install \"sangfor-scp[token-auth]\".",
+    "Catch sangfor_scp exceptions (SCPError and subclasses such as SCPNotFoundError, SCPTaskError, SCPTimeoutError) instead of checking HTTP status codes."
+  ]
+}
