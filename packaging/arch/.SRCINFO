@@ -16,6 +16,6 @@ pkgbase = python-sangfor-scp
 	depends = python-urllib3
 	optdepends = python-pycryptodome: token (username/password) authentication
 	source = https://files.pythonhosted.org/packages/source/s/sangfor_scp/sangfor_scp-0.4.5.tar.gz
-	sha256sums = a0aab270da8ac4376c3f89e77e7ce8b781be03bb27ab0bf7c0bdf4ab3d38af07
+	sha256sums = 58cc471930d3513ae16272679c5d6422845f1adab5dd70336daeaad0750dcef8
 
 pkgname = python-sangfor-scp
