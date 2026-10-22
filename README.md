@@ -448,6 +448,13 @@ scp-health --days 7 --csv report/            # also write CSV files (Excel-ready
 scp-health --cpu-scan --workers 4 --csv report/   # + CPU type of every HCI VM (1 request per VM)
 ```
 
+Or with Docker (amd64/arm64), nothing to install:
+
+```bash
+docker run --rm --env-file .env ghcr.io/erelbi/sangfor-scp --days 7
+docker run --rm --env-file .env -v "$PWD/report:/data" ghcr.io/erelbi/sangfor-scp --csv /data
+```
+
 From Python:
 
 ```python
