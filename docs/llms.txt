@@ -1,0 +1,91 @@
+# sangfor-scp
+
+> Python client library for the Sangfor Cloud Platform (SCP) Open-API, plus the `scp-health` CLI (read-only platform health report). Pure Python, MIT licensed, Python >= 3.8, depends on `requests` and `urllib3` (`pycryptodome` only for token auth). Install: `pip install sangfor-scp` (token auth: `pip install "sangfor-scp[token-auth]"`). Import name: `sangfor_scp`.
+
+Key facts for code generation:
+
+- Single entry point: `from sangfor_scp import SCPClient`. Resources are attributes of the client: `client.servers`, `client.resource_pools`, `client.tenants`, `client.networks`, `client.images`, `client.volumes`, `client.eips`, `client.tasks`, `client.system`, `client.alarms`, `client.metrics`, `client.provisioner`.
+- Return values are plain `dict` / `list` objects parsed from the API JSON (no model classes).
+- Write operations are asynchronous on SCP: most return a `task_id` (or a dict containing `task_id`); wait with `client.tasks.wait(task_id, timeout=300)`.
+- `list(**filters)` returns a list of all records; `list_all(**filters)` iterates all pages lazily; `list_page(page_num=0, page_size=10)` returns one raw page; `count(**filters)` returns the total.
+- "az" / `az_id` means an SCP resource pool (availability zone). IDs are UUID strings.
+- SCP uses self-signed certificates; `verify_ssl` defaults to `False`.
+
+## Authentication
+
+```python
+from sangfor_scp import SCPClient
+
+# EC2 / AK-SK (AWS4-HMAC-SHA256) — recommended
+client = SCPClient(host="10.0.0.10", access_key="AK", secret_key="SK", region="cn-south-1")
+
+# Token (username/password; needs pycryptodome or pycryptodomex)
+client = SCPClient(host="10.0.0.10", username="admin", password="secret")
+```
+
+Constructor: `SCPClient(host, access_key=None, secret_key=None, region="cn-south-1", service="open-api", username=None, password=None, verify_ssl=False, timeout=30, api_version="20180725")`.
+
+## Common tasks
+
+```python
+for vm in client.servers.list_all(az_id="az-uuid", status="running"):
+    print(vm["id"], vm["name"], vm["status"])
+
+vm = client.servers.find_by_name("web-01")          # exact match or None
+task_id = client.servers.stop(vm["id"], force=False)
+client.tasks.wait(task_id, timeout=300)
+
+result = client.servers.create(
+    az_id="az-uuid", image_id="image-uuid", storage_tag_id="storage-tag-uuid",
+    cores=2, memory_mb=2048, name="my-vm",
+    networks=[{"vif_id": "net0", "vpc_id": "vpc-uuid", "subnet_id": "subnet-uuid",
+               "connect": 1, "model": "virtio"}],
+    power_on=True,
+)
+client.tasks.wait(result["task_id"])
+new_vm_id = result["uuids"][0]
+
+for task in client.tasks.list_failed(days=7):
+    print(task["begin_time"], task["action"], task["description"])
+
+stats = client.metrics.server_summary(vm["id"], timegap="24h")   # min/max/avg/last per metric
+```
+
+## Resource methods
+
+- `servers`: `list`, `list_all`, `list_page`, `count`, `list_by_az(az_id)`, `list_running`, `get(server_id)`, `get_config`, `find_by_name(name)`, `locate(server_id)`, `create(...)`, `update(server_id, name=, cores=, sockets=, memory_mb=, ...)`, `rename`, `delete(server_id, permanent=False)`, `soft_delete(server_ids)`, `restore`, `start`, `stop(force=)`, `reboot(force=)`, `suspend`, `resume`, `power_on`, `power_off`, `batch_action(server_ids, action)`, `clone(server_id, name, ...)`, `clone_v2(server_id, name, power_on=, count=, networks=, ...)` (SCP 6.3.70+), `check_migration(server_id, host_id)`, `migrate(server_id, host_id=None, storage_location=None, ...)`, `attach_volume(server_id, volume_id)`, `detach_volume`, `get_console(server_id, protocol="vnc", console_type="novnc")`, `set_password(server_id, password)`, `reset_password(server_id, encrypted_password)`.
+- `resource_pools`: `list`, `get(az_id)`, `overview(az_id=None)`, `storage_tags(az_id)`.
+- `tenants`: `list`, `get`, `find_by_name`, `list_by_resource_pool(az_id)`.
+- `networks`: `list_vpcs`, `get_vpc`, `find_vpc_by_name`, `create_vpc(az_id, name)`, `update_vpc`, `delete_vpc`, `list_subnets`, `get_subnet`, `find_subnet_by_name`, `create_subnet(vpc_id, az_id, cidr, name, gateway_ip=None)`, `delete_subnet`; classic (non-VPC) networks: `list_classic_switches`, `find_vlan_group(name, az_id=None)`, `classic_nic(switch_id, vlan_group_id, ip_address, netmask=, gateway=, dns=)` builds a NIC dict for `servers.create(networks=[...])`.
+- `images`: `list`, `get`, `find_by_name`, `list_acloud(az_id=None)`, `list_iso(az_id=None)`.
+- `volumes`: `list`, `get`, `create(az_id, storage_tag_id, size_mb, name)`, `delete`, `resize(volume_id, new_size_mb)`, `list_attached(server_id)`, `list_available`.
+- `eips`: `list`, `get`, `list_pools`, `list_bound`, `list_unbound`, `allocate(project_id, bandwidth_mb=100, ...)`, `bind(eip_id, vpc_id, port_id=None, ip_address=None)`, `unbind`, `release`, `update_bandwidth(eip_id, bandwidth_mb)`.
+- `tasks`: `get(task_id)`, `is_done`, `wait(task_id, timeout=300, poll_interval=3, progress_callback=None)`, `list(**filters)` (newest first), `list_since(days=30)`, `list_failed(days=30)`.
+- `system`: `version`, `platform_info`, `license_summary`, `maintenance_mode`, `overview(az_id=None)`, `list_all_hosts`, `get_host(host_id)`, `list_host_interfaces(host_id)`.
+- `alarms`: `list(**filters)` (current alarms), `get(alarm_id)`, `history(page_size=100, **filters)` (includes resolved), `count_by(field)`, `parse_partitions(alarm)` (disk usage alarms → `[(mount, percent)]`).
+- `metrics`: `server(server_id, metric_names=("cpu.util", "memory.util"), timegap="1h")`, `server_summary`, `host`, `host_summary`, `az`, `query(object_id, object_type, metric_names, timegap="1h", granularity=None, stop_time=None)`. `stop_time` is platform local time; the client corrects the offset automatically (`client.metrics.utc_offset`).
+- `provisioner`: declarative VM specs — `plan(spec)` (read-only; action create | no-op | drift), `apply(spec, on_event=print)`, `destroy(spec)`. Spec keys: `name`, `resource_pool`, `image`, `storage_tag`, `cores`, `memory_gb`, `disks: [{size_gb}]`, `networks: [{switch, vlan, ip, netmask, gateway}]` or VPC/subnet, `hostname`, `power_on`. Raises `SpecError` on invalid specs.
+
+## Errors
+
+All exceptions derive from `SCPError` and are importable from `sangfor_scp`: `SCPAuthError` (401), `SCPForbiddenError` (403), `SCPNotFoundError` (404), `SCPConflictError` (409), `SCPRateLimitError` (429), `SCPBadRequestError` (400), `SCPServerError` (500; other unmapped statuses raise plain `SCPError` with `.status_code`), `SCPTaskError` (async task failed; `.task_data`), `SCPTimeoutError` (`tasks.wait` timed out; `.timeout`), `SCPPreflightError` (e.g. migration pre-check failed), `SpecError` (provisioning spec).
+
+## scp-health CLI
+
+Read-only report: current alarms, VM disk usage, failed tasks grouped by cause, host CPU generations, memory pressure, capacity, lost VMs. Credentials come from environment variables or a `.env` file: `SCP_HOST`, `SCP_ACCESS_KEY` + `SCP_SECRET_KEY` (or `SCP_USERNAME` + `SCP_PASSWORD`), optional `SCP_REGION`.
+
+```bash
+scp-health                                  # text summary (Turkish)
+scp-health --days 7 --csv report/           # also CSV files
+scp-health --json report.json --cpu-scan    # raw JSON, plus CPU type of every VM
+docker run --rm --env-file .env ghcr.io/erelbi/sangfor-scp --days 7
+```
+
+From Python: `from sangfor_scp.health import collect, render_text, write_csv, write_json`; `report = collect(client, days=30, cpu_scan=False)`.
+
+## Links
+
+- [README](https://github.com/erelbi/sangfor-scp/blob/main/README.md): full usage guide with examples
+- [Source](https://github.com/erelbi/sangfor-scp): GitHub repository
+- [PyPI](https://pypi.org/project/sangfor-scp/): releases
+- [scp-health(1)](https://github.com/erelbi/sangfor-scp/blob/main/man/scp-health.1): CLI man page
