@@ -1,6 +1,7 @@
 """alarms, metrics, tasks listesi, migrate ön kontrolü ve health raporu — ağ gerektirmez."""
 from __future__ import annotations
 
+import os
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock
 
@@ -265,5 +266,5 @@ def test_render_and_csv(tmp_path):
     text = render_text(report)
     assert "vm-a" in text and "1 başarısız" in text and "yetki yok" in text
     files = write_csv(report, str(tmp_path))
-    names = {p.rsplit("/", 1)[-1] for p in files}
+    names = {os.path.basename(p) for p in files}
     assert {"alarmlar.csv", "disk_doluluk.csv", "basarisiz_tasklar.csv", "hostlar.csv", "vm_cpu_tipleri.csv"} <= names
