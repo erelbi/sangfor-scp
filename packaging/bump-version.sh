@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sürümü altı yerde birden günceller: pyproject.toml, sangfor_scp/__init__.py,
-# RPM spec, debian/changelog, Arch PKGBUILD/.SRCINFO ve openSUSE spec/.changes.
+# RPM spec, debian/changelog, Arch PKGBUILD/.SRCINFO ve OBS spec/.changes/.dsc.
 #
 #   packaging/bump-version.sh 0.5.0 "Snapshot yönetimi eklendi"
 #
@@ -66,6 +66,10 @@ sed -i "s/^Version: .*/Version:        $NEW/" "$OBS/python-sangfor-scp.spec"
     cat "$OBS/python-sangfor-scp.changes"
 } > "$OBS/python-sangfor-scp.changes.new"
 mv "$OBS/python-sangfor-scp.changes.new" "$OBS/python-sangfor-scp.changes"
+# OBS Debian/Ubuntu: .dsc sürümü ve tarball adı (debian.tar.gz yüklemede
+# packaging/debian'dan üretilir)
+sed -i -e "s/^Version: .*/Version: $NEW-1/" \
+       -e "s/sangfor_scp-$OLD\.tar\.gz/sangfor_scp-$NEW.tar.gz/" "$OBS/python-sangfor-scp.dsc"
 
 echo "$OLD → $NEW"
 grep -n "^version" "$ROOT/pyproject.toml"

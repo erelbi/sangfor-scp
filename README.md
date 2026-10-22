@@ -64,6 +64,12 @@ sudo dnf copr enable erelbi/sangfor-scp && sudo dnf install python3-sangfor-scp
 # openSUSE Tumbleweed (OBS); for Leap use openSUSE_Leap_16.0 or openSUSE_Leap_15.6
 sudo zypper addrepo https://download.opensuse.org/repositories/home:erelbi/openSUSE_Tumbleweed/home:erelbi.repo
 sudo zypper refresh && sudo zypper install python3-sangfor-scp   # Leap 15.6: python311-sangfor-scp
+
+# Debian 12/13, Ubuntu 24.04/26.04 (OBS); set R to Debian_12, Debian_13, xUbuntu_24.04 or xUbuntu_26.04
+R=https://download.opensuse.org/repositories/home:/erelbi/xUbuntu_24.04
+curl -fsSL "$R/Release.key" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_erelbi.gpg >/dev/null
+echo "deb $R/ /" | sudo tee /etc/apt/sources.list.d/home_erelbi.list
+sudo apt update && sudo apt install python3-sangfor-scp
 ```
 
 ### RPM / DEB packages

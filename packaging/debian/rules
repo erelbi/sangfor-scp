@@ -5,3 +5,16 @@ export PYBUILD_TEST_ARGS={dir}/tests
 
 %:
 	dh $@ --buildsystem=pybuild
+
+# setuptools older than 77 (Debian 12, Ubuntu 24.04) does not understand the
+# PEP 639 license fields (license = "MIT", license-files); convert them to the
+# older table form for the build and restore the original on clean.
+execute_before_dh_auto_configure:
+	if ! python3 -c 'import setuptools, sys; sys.exit(int(setuptools.__version__.split(".")[0]) < 77)'; then \
+		cp pyproject.toml debian/pyproject.toml.orig; \
+		sed -i -e 's/^license = "MIT"$$/license = {text = "MIT"}/' -e '/^license-files = /d' \
+		    -e 's/"setuptools>=68"/"setuptools>=61"/' pyproject.toml; \
+	fi
+
+execute_after_dh_auto_clean:
+	if [ -f debian/pyproject.toml.orig ]; then mv debian/pyproject.toml.orig pyproject.toml; fi
