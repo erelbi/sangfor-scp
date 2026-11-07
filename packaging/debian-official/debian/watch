@@ -1,0 +1,6 @@
+Version: 5
+
+Source: https://pypi.debian.net/sangfor-scp/
+Matching-Pattern: sangfor_scp-@ANY_VERSION@@ARCHIVE_EXT@
+Repack-Suffix: +ds
+Dversion-Mangle: s/\+ds\d*$//
